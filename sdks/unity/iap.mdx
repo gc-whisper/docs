@@ -1,29 +1,22 @@
 ---
-title: 'In-App Purchases'
-description: 'Implement and track in-app purchases with GameRamp SDK'
-icon: 'sack-dollar'
+title: "In-App Purchases"
+description: "Implement and track in-app purchases with GameRamp SDK"
+icon: "sack-dollar"
 ---
-
-# In-App Purchases (IAP)
-
-Complete in-app purchase integration with store management, purchase flow, and event tracking.
 
 ## Overview
 
-The GameRamp SDK provides a comprehensive IAP solution that works across iOS and Android platforms.
+The GameRamp SDK tracks IAPs across iOS and Android platforms, and enables SKU personalization at a  user-level
 
 <CardGroup cols={2}>
   <Card title="Store Products" icon="store">
     Fetch and display available products
   </Card>
-  <Card title="Purchase Flow" icon="credit-card">
-    Handle the complete purchase process
-  </Card>
-  <Card title="Receipt Validation" icon="shield-check">
-    Secure server-side validation
+  <Card title="Fetch Configs" icon="shield-check">
+    Retrieve personalized configs for each player
   </Card>
   <Card title="Event Tracking" icon="chart-line">
-    Monitor purchase metrics
+    Monitor purchases metrics
   </Card>
 </CardGroup>
 
@@ -41,6 +34,7 @@ Gameramp.FetchStoreProducts(
 ### Implementation
 
 <CodeGroup>
+
 ```csharp Basic Product Fetch
 void LoadShop() {
     Gameramp.FetchStoreProducts(
@@ -58,6 +52,7 @@ void LoadShop() {
     );
 }
 ```
+
 
 ```csharp Shop UI Integration
 public class ShopManager : MonoBehaviour {
@@ -97,6 +92,7 @@ public class ShopManager : MonoBehaviour {
     }
 }
 ```
+
 </CodeGroup>
 
 ## Initiating Purchases
@@ -128,6 +124,7 @@ Gameramp.InitiatePurchase(
 ### Implementation Examples
 
 <CodeGroup>
+
 ```csharp Simple Purchase
 public void BuyProduct(string skuId) {
     Gameramp.InitiatePurchase(
@@ -145,6 +142,7 @@ public void BuyProduct(string skuId) {
     );
 }
 ```
+
 
 ```csharp Purchase with UI Feedback
 public class PurchaseHandler : MonoBehaviour {
@@ -198,6 +196,7 @@ public class PurchaseHandler : MonoBehaviour {
     }
 }
 ```
+
 </CodeGroup>
 
 ## Purchase Events
@@ -217,6 +216,7 @@ Gameramp.OnPurchaseFailed -= HandlePurchaseFailed;
 ### Event Implementation
 
 <CodeGroup>
+
 ```csharp Global Event Handler
 public class IAPManager : MonoBehaviour {
     void OnEnable() {
@@ -250,6 +250,7 @@ public class IAPManager : MonoBehaviour {
 }
 ```
 
+
 ```csharp Multiple Listeners
 // You can have multiple listeners for the same event
 public class ShopUI : MonoBehaviour {
@@ -274,6 +275,7 @@ public class SoundManager : MonoBehaviour {
     }
 }
 ```
+
 </CodeGroup>
 
 ## Product Types
@@ -289,7 +291,6 @@ public class SoundManager : MonoBehaviour {
     "com.game.energy_refill" // Energy refill
     ```
   </Tab>
-
   <Tab title="Non-Consumable">
     One-time purchases (remove ads, unlock features)
 
@@ -300,7 +301,6 @@ public class SoundManager : MonoBehaviour {
     "com.game.extra_levels"  // Level pack
     ```
   </Tab>
-
   <Tab title="Subscription">
     Recurring purchases (premium membership)
 
@@ -340,20 +340,20 @@ public void RestorePurchases() {
 ## Testing IAP
 
 <Warning>
-Always test IAP in sandbox/test environments before production release.
+  Always test IAP in sandbox/test environments before production release.
 </Warning>
 
 ### Testing Checklist
 
 <Checklist>
-- [ ] Test with sandbox accounts (iOS) / test accounts (Android)
-- [ ] Verify all product IDs match store configuration
-- [ ] Test purchase success flow
-- [ ] Test purchase cancellation
-- [ ] Test network failure handling
-- [ ] Verify receipt validation
-- [ ] Test restore purchases
-- [ ] Check currency display and localization
+  * [ ] Test with sandbox accounts (iOS) / test accounts (Android)
+  * [ ] Verify all product IDs match store configuration
+  * [ ] Test purchase success flow
+  * [ ] Test purchase cancellation
+  * [ ] Test network failure handling
+  * [ ] Verify receipt validation
+  * [ ] Test restore purchases
+  * [ ] Check currency display and localization
 </Checklist>
 
 ## Troubleshooting
@@ -365,14 +365,12 @@ Always test IAP in sandbox/test environments before production release.
     - Ensure store agreements are signed
     - Wait for products to propagate (can take hours)
   </Accordion>
-
   <Accordion title="Purchase Fails Immediately">
     - Check if testing on correct environment
     - Verify store credentials in config
     - Ensure user is signed into store account
     - Check if products are approved/active
   </Accordion>
-
   <Accordion title="Receipt Validation Issues">
     - Ensure server endpoints are configured
     - Check network connectivity
@@ -404,18 +402,10 @@ Always test IAP in sandbox/test environments before production release.
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card
-    title="API Reference"
-    icon="code"
-    href="/sdks/unity/api-reference"
-  >
+  <Card title="API Reference" icon="code" href="/sdks/unity/api-reference">
     Complete method documentation
   </Card>
-  <Card
-    title="Troubleshooting"
-    icon="wrench"
-    href="/sdks/unity/troubleshooting"
-  >
+  <Card title="Troubleshooting" icon="wrench" href="/sdks/unity/troubleshooting">
     Common issues and solutions
   </Card>
 </CardGroup>
