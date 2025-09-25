@@ -134,5 +134,19 @@
       "x": "https://x.com/gamerampHQ",
       "linkedin": "https://www.linkedin.com/company/gameramp/"
     }
+  },
+  "hideMintlifyBranding": true,
+  "typography": {
+    "font": {
+      "headings": {
+        "family": "Geist"
+      },
+      "body": {
+        "family": "Geist"
+      },
+      "code": {
+        "family": "Geist Mono"
+      }
+    }
   }
 }
