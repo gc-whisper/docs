@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
+  "theme": "linden",
   "name": "GameRamp Documentation",
   "colors": {
     "primary": "#277C48",
@@ -136,17 +136,16 @@
     }
   },
   "hideMintlifyBranding": true,
-  "typography": {
-    "font": {
-      "headings": {
-        "family": "Geist"
-      },
-      "body": {
-        "family": "Geist"
-      },
-      "code": {
-        "family": "Geist Mono"
-      }
+  "font": {
+    "headings": {
+      "family": "Geist, system-ui, sans-serif"
+    },
+    "body": {
+      "family": "Geist, system-ui, sans-serif"
+    },
+    "code": {
+      "family": "Geist Mono, monospace"
     }
-  }
+  },
+  "css": ["custom.css"]
 }
