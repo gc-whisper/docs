@@ -44,18 +44,8 @@
           {
             "group": "Reference",
             "pages": [
-              "sdks/unity/api-reference"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Guides",
-        "groups": [
-          {
-            "group": "Support",
-            "pages": [
-              "guides/troubleshooting"
+              "sdks/unity/api-reference",
+              "sdks/unity/troubleshooting"
             ]
           }
         ]
