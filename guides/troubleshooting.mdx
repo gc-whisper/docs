@@ -1,0 +1,371 @@
+---
+title: 'Troubleshooting & FAQ'
+description: 'Common issues and solutions for GameRamp SDK'
+icon: 'wrench'
+---
+
+# Troubleshooting & FAQ
+
+Quick solutions to common issues with the GameRamp Unity SDK.
+
+## Installation Issues
+
+<AccordionGroup>
+  <Accordion title="SDK not initializing">
+    **Symptoms**: No logs, SDK features not working
+
+    **Solutions**:
+    - Verify SDK Key and Secret Key are correctly entered in config
+    - Check Unity Console for error messages
+    - Ensure config asset is assigned to GameObject/Prefab
+    - Confirm `Gameramp.Initialize()` is called before other methods
+
+    ```csharp
+    // Enable logging to debug
+    GRLogger.IsLoggingEnabled = true;
+    ```
+  </Accordion>
+
+  <Accordion title="Can't find Create → Gameramp menu">
+    **Symptoms**: Menu option missing in Unity
+
+    **Solutions**:
+    - Confirm SDK was imported successfully
+    - Check if `GamerampSDK/` folder exists
+    - Try reimporting the package
+    - Restart Unity Editor
+  </Accordion>
+
+  <Accordion title="Import errors">
+    **Symptoms**: Compilation errors after import
+
+    **Solutions**:
+    - Ensure Unity 2021.3+ is being used
+    - Check for conflicting packages
+    - Clear Unity's Library folder and reimport
+    - Verify no duplicate SDK imports
+  </Accordion>
+</AccordionGroup>
+
+## Authentication Issues
+
+<AccordionGroup>
+  <Accordion title="Login failing">
+    **Symptoms**: Login callback returns failure
+
+    **Solutions**:
+    - Verify internet connectivity
+    - Check credentials are valid and active
+    - Ensure `Initialize()` is called before `Login()`
+    - Check firewall/proxy settings
+
+    ```csharp
+    Gameramp.Login(
+        onSuccess: () => Debug.Log("Success"),
+        onFail: () => {
+            Debug.LogError("Login failed - check credentials");
+            // Retry logic here
+        }
+    );
+    ```
+  </Accordion>
+
+  <Accordion title="Session not persisting">
+    **Symptoms**: User logged out after app restart
+
+    **Solutions**:
+    - Ensure prefab has DontDestroyOnLoad
+    - Check if `Cleanup()` is called prematurely
+    - Verify session persistence settings
+  </Accordion>
+</AccordionGroup>
+
+## Build Issues
+
+<AccordionGroup>
+  <Accordion title="IL2CPP build errors">
+    **Symptoms**: Missing method exceptions at runtime
+
+    **Solutions**:
+    1. Ensure `link.xml` is in `Assets/` root directory
+    2. Verify file contains GameRamp entries:
+
+    ```xml
+    <linker>
+      <assembly fullname="GamerampCoreDLL" preserve="all"/>
+      <assembly fullname="GamerampUnitySDK" preserve="all"/>
+      <assembly fullname="Newtonsoft.Json" preserve="all"/>
+    </linker>
+    ```
+
+    3. Check Unity Console for stripping warnings
+    4. Set Stripping Level to Low or Disabled for testing
+  </Accordion>
+
+  <Accordion title="Android build fails">
+    **Symptoms**: Gradle build errors
+
+    **Solutions**:
+    - Verify Java version matches Unity version:
+      - Unity 2021.3.45: Use VERSION_11
+      - Unity 6: Use VERSION_17
+    - Enable custom mainTemplate.gradle
+    - Clear Gradle cache: `~/.gradle/caches/`
+    - Update Android SDK/NDK if needed
+  </Accordion>
+
+  <Accordion title="iOS build issues">
+    **Symptoms**: Xcode build or archive failures
+
+    **Solutions**:
+    - Set minimum iOS version to 12.0
+    - Verify provisioning profile includes capabilities
+    - Check Info.plist has required usage descriptions
+    - Ensure StoreKit is linked (auto-handled by SDK)
+  </Accordion>
+</AccordionGroup>
+
+## Analytics Issues
+
+<AccordionGroup>
+  <Accordion title="Events not tracking">
+    **Symptoms**: Analytics not showing in dashboard
+
+    **Solutions**:
+    - Verify SDK is initialized and logged in
+    - Check internet connectivity
+    - Enable debug logging to confirm events:
+
+    ```csharp
+    GRLogger.IsLoggingEnabled = true;
+    Gameramp.TrackSessionStart();
+    // Check console for confirmation
+    ```
+
+    - Allow time for data to appear (up to 5 minutes)
+  </Accordion>
+
+  <Accordion title="First open tracking multiple times">
+    **Symptoms**: First open event fired repeatedly
+
+    **Solutions**:
+    - Implement once-only logic:
+
+    ```csharp
+    if (!PlayerPrefs.HasKey("FirstOpenTracked")) {
+        Gameramp.TrackFirstOpen("source", "campaign");
+        PlayerPrefs.SetInt("FirstOpenTracked", 1);
+        PlayerPrefs.Save();
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## IAP Issues
+
+<AccordionGroup>
+  <Accordion title="Products not loading">
+    **Symptoms**: Empty product list
+
+    **Solutions**:
+    - Verify product IDs match store configuration exactly
+    - Check internet connection
+    - Ensure store agreements are signed (iOS/Android)
+    - Wait for products to propagate (can take 24 hours)
+    - Test with sandbox/test accounts
+
+    ```csharp
+    Gameramp.FetchStoreProducts(
+        (products) => {
+            if (products.activeSkus.Count == 0) {
+                Debug.LogWarning("No products available");
+            }
+        },
+        (error) => Debug.LogError($"Fetch failed: {error}")
+    );
+    ```
+  </Accordion>
+
+  <Accordion title="Purchase fails immediately">
+    **Symptoms**: Purchase callback fails instantly
+
+    **Solutions**:
+    - Verify testing on correct environment
+    - Check store credentials in config
+    - Ensure user signed into store account
+    - Verify products are approved/active in store
+    - Check if IAP is restricted on device
+  </Accordion>
+
+  <Accordion title="Receipt validation failing">
+    **Symptoms**: Purchases succeed but validation fails
+
+    **Solutions**:
+    - Ensure server endpoints are configured
+    - Check network connectivity
+    - Verify receipt format is correct
+    - Look for server-side validation logs
+    - Test with sandbox receipts in test mode
+  </Accordion>
+
+  <Accordion title="Restore purchases not working">
+    **Symptoms**: Previously purchased items not restored
+
+    **Solutions**:
+    ```csharp
+    // Reinitialize IAP to restore
+    Gameramp.ReinitializeIAP();
+
+    // Then fetch products
+    Gameramp.FetchStoreProducts(
+        (products) => {
+            // Check products.ownedSkus for restored items
+            foreach (var owned in products.ownedSkus) {
+                GrantPurchase(owned.skuId);
+            }
+        },
+        (error) => Debug.LogError($"Restore failed: {error}")
+    );
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Ad Tracking Issues
+
+<AccordionGroup>
+  <Accordion title="Ad impressions not tracking">
+    **Symptoms**: Ad events not appearing in dashboard
+
+    **Solutions**:
+    - Ensure ads are actually shown (not just loaded)
+    - Track after successful ad display:
+
+    ```csharp
+    // Track AFTER ad is shown, not when loaded
+    void OnAdShown() {
+        Gameramp.TrackBannerAd("placement", "campaign");
+    }
+    ```
+
+    - Verify ad IDs and campaign IDs are valid
+    - Check network connectivity
+  </Accordion>
+</AccordionGroup>
+
+## Performance Issues
+
+<AccordionGroup>
+  <Accordion title="SDK causing lag">
+    **Symptoms**: Frame drops or stuttering
+
+    **Solutions**:
+    - Disable verbose logging in production:
+
+    ```csharp
+    #if !DEBUG
+    GRLogger.IsLoggingEnabled = false;
+    #endif
+    ```
+
+    - Batch analytics calls when possible
+    - Use async callbacks appropriately
+    - Profile with Unity Profiler to identify bottlenecks
+  </Accordion>
+
+  <Accordion title="Memory leaks">
+    **Symptoms**: Increasing memory usage over time
+
+    **Solutions**:
+    - Unsubscribe from events when not needed:
+
+    ```csharp
+    void OnDestroy() {
+        Gameramp.OnPurchaseCompleted -= HandlePurchase;
+        Gameramp.OnPurchaseFailed -= HandleFailure;
+        Gameramp.Cleanup();
+    }
+    ```
+
+    - Call `Cleanup()` on app quit
+    - Avoid creating multiple SDK instances
+  </Accordion>
+</AccordionGroup>
+
+## Debugging Tips
+
+### Enable Verbose Logging
+
+```csharp
+// At startup
+GRLogger.IsLoggingEnabled = true;
+
+// Test all features
+Gameramp.TrackSessionStart();
+Gameramp.TrackBannerAd("test", "debug");
+// Check Unity Console for logs
+```
+
+### Test Mode
+
+```csharp
+#if UNITY_EDITOR
+    // Mock responses in editor
+    Debug.Log("Running in test mode");
+#endif
+```
+
+### Network Debugging
+
+```csharp
+// Check connectivity before SDK calls
+if (Application.internetReachability == NetworkReachability.NotReachable) {
+    Debug.LogError("No internet connection");
+    return;
+}
+```
+
+## Common Error Messages
+
+| Error | Meaning | Solution |
+|-------|---------|----------|
+| "SDK not initialized" | Initialize not called | Call `Gameramp.Initialize()` first |
+| "Invalid credentials" | Wrong SDK/Secret key | Check config values |
+| "Network error" | No internet | Check connectivity |
+| "Product not found" | Invalid SKU | Verify product IDs |
+| "Purchase cancelled" | User cancelled | Normal behavior |
+| "Receipt invalid" | Validation failed | Check server config |
+
+## Best Practices
+
+<Steps>
+  <Step title="Always Initialize First">
+    Call `Initialize()` before any other SDK methods
+  </Step>
+  <Step title="Handle Callbacks">
+    Always provide error callbacks for debugging
+  </Step>
+  <Step title="Test Thoroughly">
+    Test on actual devices, not just Unity Editor
+  </Step>
+  <Step title="Use Logging Wisely">
+    Enable in development, disable in production
+  </Step>
+  <Step title="Clean Up Resources">
+    Call `Cleanup()` and unsubscribe events
+  </Step>
+</Steps>
+
+## Still Need Help?
+
+<Card
+  title="Contact Support"
+  icon="envelope"
+  href="mailto:connect@gameramp.com"
+>
+  If you're still experiencing issues, our support team is here to help. Include:
+  - Unity version
+  - SDK version
+  - Platform (Android/iOS)
+  - Error messages
+  - Steps to reproduce
+</Card>

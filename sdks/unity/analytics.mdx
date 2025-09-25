@@ -1,0 +1,197 @@
+---
+title: 'Analytics'
+description: 'Track user sessions and app events'
+icon: 'chart-line'
+---
+
+# Analytics
+
+Track user behavior, sessions, and custom events to understand how players interact with your game.
+
+## Session Tracking
+
+Track when users start and end game sessions.
+
+### Track Session Start
+
+```csharp
+Gameramp.TrackSessionStart();
+```
+
+Call this when:
+- App launches
+- App returns from background
+- User logs in
+
+### Track Session End
+
+```csharp
+Gameramp.TrackSessionEnd();
+```
+
+Call this when:
+- App goes to background
+- User logs out
+- App is closing
+
+<CodeGroup>
+```csharp Basic Implementation
+void OnApplicationFocus(bool hasFocus) {
+    if (hasFocus) {
+        Gameramp.TrackSessionStart();
+    } else {
+        Gameramp.TrackSessionEnd();
+    }
+}
+```
+
+```csharp Advanced Implementation
+void Start() {
+    // Track session start when game starts
+    Gameramp.TrackSessionStart();
+}
+
+void OnApplicationPause(bool pauseStatus) {
+    if (pauseStatus) {
+        Gameramp.TrackSessionEnd();
+    } else {
+        Gameramp.TrackSessionStart();
+    }
+}
+
+void OnDestroy() {
+    // Track session end when game closes
+    Gameramp.TrackSessionEnd();
+}
+```
+</CodeGroup>
+
+## First Open Tracking
+
+Track when users open your app for the first time, including attribution data.
+
+```csharp
+Gameramp.TrackFirstOpen(string source, string campaign);
+```
+
+### Parameters
+
+<ParamField path="source" type="string" required>
+  The acquisition source (e.g., "organic", "facebook", "google_ads")
+</ParamField>
+
+<ParamField path="campaign" type="string" required>
+  The campaign identifier (e.g., "summer_sale", "launch_campaign")
+</ParamField>
+
+### Example Usage
+
+<CodeGroup>
+```csharp Organic Install
+// For organic installs
+Gameramp.TrackFirstOpen("organic", "direct");
+```
+
+```csharp Campaign Install
+// For campaign-driven installs
+Gameramp.TrackFirstOpen("facebook", "summer_2024_campaign");
+```
+
+```csharp With Attribution
+// With detailed attribution
+void TrackInstallSource() {
+    string source = GetAttributionSource(); // Your attribution logic
+    string campaign = GetCampaignId();
+    
+    Gameramp.TrackFirstOpen(source, campaign);
+    
+    // Save that we've tracked first open
+    PlayerPrefs.SetInt("FirstOpenTracked", 1);
+}
+```
+</CodeGroup>
+
+## Implementation Best Practices
+
+<Steps>
+  <Step title="Session Lifecycle">
+    Implement session tracking in a persistent GameObject that survives scene changes
+  </Step>
+  <Step title="First Open Once">
+    Track first open only once per installation:
+    
+    ```csharp
+    if (!PlayerPrefs.HasKey("FirstOpenTracked")) {
+        Gameramp.TrackFirstOpen(source, campaign);
+        PlayerPrefs.SetInt("FirstOpenTracked", 1);
+    }
+    ```
+  </Step>
+  <Step title="Background Handling">
+    Use Unity's application lifecycle callbacks to properly track sessions
+  </Step>
+</Steps>
+
+## Custom Events (Coming Soon)
+
+<Note>
+Custom event tracking will be available in the next SDK update. Stay tuned!
+</Note>
+
+Future custom events will support:
+- Level completion
+- Achievement unlocks
+- In-game purchases
+- Social shares
+- Custom player actions
+
+## Analytics Dashboard
+
+View your analytics data in the GameRamp dashboard:
+
+<CardGroup cols={2}>
+  <Card title="Session Metrics" icon="clock">
+    - Average session duration
+    - Daily active users
+    - Session frequency
+    - Retention rates
+  </Card>
+  <Card title="Acquisition Metrics" icon="users">
+    - Install sources
+    - Campaign performance
+    - Organic vs paid users
+    - Attribution reports
+  </Card>
+</CardGroup>
+
+## Debugging Analytics
+
+Enable debug logging to verify events are being tracked:
+
+```csharp
+// Enable logging
+GRLogger.IsLoggingEnabled = true;
+
+// Track events
+Gameramp.TrackSessionStart();
+// Check Unity Console for confirmation
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Ads Tracking"
+    icon="rectangle-ad"
+    href="/sdks/unity/ads"
+  >
+    Track ad impressions and revenue
+  </Card>
+  <Card
+    title="In-App Purchases"
+    icon="shopping-cart"
+    href="/sdks/unity/iap"
+  >
+    Monitor purchase events
+  </Card>
+</CardGroup>

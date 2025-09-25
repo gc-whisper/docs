@@ -1,0 +1,421 @@
+---
+title: 'In-App Purchases'
+description: 'Implement and track in-app purchases with GameRamp SDK'
+icon: 'shopping-cart'
+---
+
+# In-App Purchases (IAP)
+
+Complete in-app purchase integration with store management, purchase flow, and event tracking.
+
+## Overview
+
+The GameRamp SDK provides a comprehensive IAP solution that works across iOS and Android platforms.
+
+<CardGroup cols={2}>
+  <Card title="Store Products" icon="store">
+    Fetch and display available products
+  </Card>
+  <Card title="Purchase Flow" icon="credit-card">
+    Handle the complete purchase process
+  </Card>
+  <Card title="Receipt Validation" icon="shield-check">
+    Secure server-side validation
+  </Card>
+  <Card title="Event Tracking" icon="chart-line">
+    Monitor purchase metrics
+  </Card>
+</CardGroup>
+
+## Fetching Store Products
+
+Retrieve available products from the app store to display in your shop.
+
+```csharp
+Gameramp.FetchStoreProducts(
+    Action<StoreProducts> onSuccess,
+    Action<string> onError
+);
+```
+
+### Implementation
+
+<CodeGroup>
+```csharp Basic Product Fetch
+void LoadShop() {
+    Gameramp.FetchStoreProducts(
+        (products) => {
+            foreach (var sku in products.activeSkus) {
+                Debug.Log($"{sku.name} ({sku.skuId}) - {sku.price}");
+                // Display in your shop UI
+                CreateShopItem(sku);
+            }
+        },
+        (error) => {
+            Debug.LogError($"Failed to fetch products: {error}");
+            // Show error to user
+        }
+    );
+}
+```
+
+```csharp Shop UI Integration
+public class ShopManager : MonoBehaviour {
+    [SerializeField] private GameObject shopItemPrefab;
+    [SerializeField] private Transform shopContainer;
+
+    void Start() {
+        LoadProducts();
+    }
+
+    void LoadProducts() {
+        // Show loading spinner
+        ShowLoading(true);
+
+        Gameramp.FetchStoreProducts(
+            OnProductsLoaded,
+            OnProductsFailed
+        );
+    }
+
+    void OnProductsLoaded(StoreProducts products) {
+        ShowLoading(false);
+
+        // Clear existing items
+        ClearShop();
+
+        // Create shop items
+        foreach (var sku in products.activeSkus) {
+            var shopItem = Instantiate(shopItemPrefab, shopContainer);
+            shopItem.GetComponent<ShopItem>().Setup(sku);
+        }
+    }
+
+    void OnProductsFailed(string error) {
+        ShowLoading(false);
+        ShowError($"Shop unavailable: {error}");
+    }
+}
+```
+</CodeGroup>
+
+## Initiating Purchases
+
+Start the purchase flow for a specific product.
+
+```csharp
+Gameramp.InitiatePurchase(
+    string productId,
+    Action<Purchase> onSuccess,
+    Action<string> onFailed
+);
+```
+
+### Parameters
+
+<ParamField path="productId" type="string" required>
+  The SKU ID of the product to purchase
+</ParamField>
+
+<ParamField path="onSuccess" type="Action<Purchase>">
+  Callback when purchase completes successfully
+</ParamField>
+
+<ParamField path="onFailed" type="Action<string>">
+  Callback when purchase fails with error message
+</ParamField>
+
+### Implementation Examples
+
+<CodeGroup>
+```csharp Simple Purchase
+public void BuyProduct(string skuId) {
+    Gameramp.InitiatePurchase(
+        skuId,
+        onSuccess: (purchase) => {
+            Debug.Log($"Purchase successful: {purchase.productId}");
+            // Grant the purchased item
+            GrantPurchase(purchase.productId);
+        },
+        onFailed: (error) => {
+            Debug.LogError($"Purchase failed: {error}");
+            // Show error to user
+            ShowPurchaseError(error);
+        }
+    );
+}
+```
+
+```csharp Purchase with UI Feedback
+public class PurchaseHandler : MonoBehaviour {
+    [SerializeField] private GameObject processingOverlay;
+    [SerializeField] private Text statusText;
+
+    public void InitiatePurchase(string productId) {
+        // Show processing UI
+        ShowProcessing("Processing purchase...");
+
+        Gameramp.InitiatePurchase(
+            productId,
+            OnPurchaseSuccess,
+            OnPurchaseFailed
+        );
+    }
+
+    void OnPurchaseSuccess(Purchase purchase) {
+        HideProcessing();
+
+        // Grant items
+        switch(purchase.productId) {
+            case "com.game.coins_100":
+                PlayerData.AddCoins(100);
+                break;
+            case "com.game.premium":
+                PlayerData.UnlockPremium();
+                break;
+            case "com.game.remove_ads":
+                PlayerData.RemoveAds();
+                break;
+        }
+
+        // Show success
+        ShowSuccess($"Purchase complete: {purchase.productId}");
+
+        // Update UI
+        RefreshShop();
+    }
+
+    void OnPurchaseFailed(string error) {
+        HideProcessing();
+
+        // Handle specific errors
+        if (error.Contains("cancelled")) {
+            // User cancelled - no error message needed
+            return;
+        }
+
+        ShowError($"Purchase failed: {error}");
+    }
+}
+```
+</CodeGroup>
+
+## Purchase Events
+
+Subscribe to global purchase events for centralized handling.
+
+```csharp
+// Subscribe to events
+Gameramp.OnPurchaseCompleted += HandlePurchaseCompleted;
+Gameramp.OnPurchaseFailed += HandlePurchaseFailed;
+
+// Unsubscribe when done
+Gameramp.OnPurchaseCompleted -= HandlePurchaseCompleted;
+Gameramp.OnPurchaseFailed -= HandlePurchaseFailed;
+```
+
+### Event Implementation
+
+<CodeGroup>
+```csharp Global Event Handler
+public class IAPManager : MonoBehaviour {
+    void OnEnable() {
+        // Subscribe to events
+        Gameramp.OnPurchaseCompleted += OnPurchaseCompleted;
+        Gameramp.OnPurchaseFailed += OnPurchaseFailed;
+    }
+
+    void OnDisable() {
+        // Unsubscribe to prevent memory leaks
+        Gameramp.OnPurchaseCompleted -= OnPurchaseCompleted;
+        Gameramp.OnPurchaseFailed -= OnPurchaseFailed;
+    }
+
+    void OnPurchaseCompleted(Purchase purchase) {
+        Debug.Log($"Global: Purchase completed - {purchase.productId}");
+
+        // Track analytics
+        Analytics.TrackPurchase(purchase.productId, purchase.price);
+
+        // Save purchase
+        SavePurchase(purchase);
+    }
+
+    void OnPurchaseFailed(string error) {
+        Debug.LogError($"Global: Purchase failed - {error}");
+
+        // Track failure
+        Analytics.TrackPurchaseFailure(error);
+    }
+}
+```
+
+```csharp Multiple Listeners
+// You can have multiple listeners for the same event
+public class ShopUI : MonoBehaviour {
+    void Start() {
+        Gameramp.OnPurchaseCompleted += RefreshUI;
+    }
+
+    void RefreshUI(Purchase purchase) {
+        // Update shop UI
+        RefreshPurchaseButtons();
+        UpdateCurrencyDisplay();
+    }
+}
+
+public class SoundManager : MonoBehaviour {
+    void Start() {
+        Gameramp.OnPurchaseCompleted += PlayPurchaseSound;
+    }
+
+    void PlayPurchaseSound(Purchase purchase) {
+        audioSource.PlayOneShot(purchaseSuccessSound);
+    }
+}
+```
+</CodeGroup>
+
+## Product Types
+
+<Tabs>
+  <Tab title="Consumable">
+    Items that can be purchased multiple times (coins, gems, lives)
+
+    ```csharp
+    // Example consumable products
+    "com.game.coins_100"     // 100 coins
+    "com.game.coins_500"     // 500 coins
+    "com.game.energy_refill" // Energy refill
+    ```
+  </Tab>
+
+  <Tab title="Non-Consumable">
+    One-time purchases (remove ads, unlock features)
+
+    ```csharp
+    // Example non-consumable products
+    "com.game.remove_ads"    // Remove all ads
+    "com.game.unlock_pro"    // Pro version
+    "com.game.extra_levels"  // Level pack
+    ```
+  </Tab>
+
+  <Tab title="Subscription">
+    Recurring purchases (premium membership)
+
+    ```csharp
+    // Example subscription products
+    "com.game.vip_monthly"   // Monthly VIP
+    "com.game.vip_yearly"    // Yearly VIP
+    "com.game.battle_pass"   // Season pass
+    ```
+  </Tab>
+</Tabs>
+
+## Restore Purchases
+
+For non-consumable items and subscriptions:
+
+```csharp
+public void RestorePurchases() {
+    // Reinitialize IAP to restore
+    Gameramp.ReinitializeIAP();
+
+    // Fetch products will include owned items
+    Gameramp.FetchStoreProducts(
+        (products) => {
+            // Check for owned products
+            foreach (var sku in products.ownedSkus) {
+                GrantPurchase(sku.skuId);
+            }
+        },
+        (error) => {
+            Debug.LogError($"Restore failed: {error}");
+        }
+    );
+}
+```
+
+## Testing IAP
+
+<Warning>
+Always test IAP in sandbox/test environments before production release.
+</Warning>
+
+### Testing Checklist
+
+<Checklist>
+- [ ] Test with sandbox accounts (iOS) / test accounts (Android)
+- [ ] Verify all product IDs match store configuration
+- [ ] Test purchase success flow
+- [ ] Test purchase cancellation
+- [ ] Test network failure handling
+- [ ] Verify receipt validation
+- [ ] Test restore purchases
+- [ ] Check currency display and localization
+</Checklist>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Products Not Loading">
+    - Verify product IDs match exactly with store setup
+    - Check internet connection
+    - Ensure store agreements are signed
+    - Wait for products to propagate (can take hours)
+  </Accordion>
+
+  <Accordion title="Purchase Fails Immediately">
+    - Check if testing on correct environment
+    - Verify store credentials in config
+    - Ensure user is signed into store account
+    - Check if products are approved/active
+  </Accordion>
+
+  <Accordion title="Receipt Validation Issues">
+    - Ensure server endpoints are configured
+    - Check network connectivity
+    - Verify receipt format is correct
+    - Look for server-side validation logs
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<Steps>
+  <Step title="Clear Pricing">
+    Always show clear, localized prices before purchase
+  </Step>
+  <Step title="Purchase Feedback">
+    Provide immediate visual/audio feedback on purchase
+  </Step>
+  <Step title="Error Handling">
+    Show user-friendly error messages for failures
+  </Step>
+  <Step title="Receipt Storage">
+    Save purchase receipts for verification
+  </Step>
+  <Step title="Restore Option">
+    Always provide restore button for non-consumables
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/sdks/unity/api-reference"
+  >
+    Complete method documentation
+  </Card>
+  <Card
+    title="Troubleshooting"
+    icon="wrench"
+    href="/guides/troubleshooting"
+  >
+    Common issues and solutions
+  </Card>
+</CardGroup>

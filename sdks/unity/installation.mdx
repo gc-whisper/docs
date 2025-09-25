@@ -1,0 +1,189 @@
+---
+title: 'Installation'
+description: 'Get started with GameRamp SDK in 3 simple steps'
+icon: 'download'
+---
+
+# Quick Start
+
+Get started with GameRamp SDK in just 3 steps. Choose between automatic setup with our prefab or manual configuration.
+
+## Step 1: Import the SDK
+
+<Steps>
+  <Step title="Download the Package">
+    Download the GameRamp SDK package (.unitypackage) from your dashboard
+  </Step>
+  <Step title="Import in Unity">
+    In Unity: **Assets → Import Package → Custom Package**
+  </Step>
+  <Step title="Select and Import">
+    Select the downloaded package and import all files
+  </Step>
+  <Step title="Verify Installation">
+    Confirm the `GamerampSDK/` folder is present in your project
+  </Step>
+</Steps>
+
+<Check>
+After importing, you should see the `GamerampSDK/` folder in your Project window with all SDK files.
+</Check>
+
+## Step 2: Create Configuration
+
+<Steps>
+  <Step title="Create Config Asset">
+    In the Project window: **Create → Gameramp → SDKConfig**
+  </Step>
+  <Step title="Name the Config">
+    Name it `GamerampConfig` (or any preferred name)
+  </Step>
+  <Step title="Add Credentials">
+    Fill in your credentials in the Inspector:
+    - **SDK Key** (required)
+    - **Secret Key** (required)
+  </Step>
+</Steps>
+
+<Warning>
+Keep your Secret Key secure and never commit it to public repositories.
+</Warning>
+
+## Step 3: Initialize SDK
+
+Choose one of the following initialization methods:
+
+<Tabs>
+  <Tab title="Option 1: Prefab (Recommended)">
+    The easiest way to get started - perfect for most use cases.
+
+    <Steps>
+      <Step title="Add Prefab to Scene">
+        Drag `Gameramp.prefab` from `GamerampSDK/Prefabs/` into your first scene
+      </Step>
+      <Step title="Assign Configuration">
+        Select the prefab and assign your `GamerampConfig` to the config field in the Inspector
+      </Step>
+      <Step title="Automatic Initialization">
+        The prefab will automatically:
+        - Initialize the SDK on Start
+        - Handle authentication
+        - Persist across scenes (DontDestroyOnLoad)
+      </Step>
+    </Steps>
+
+    <Info>
+    The prefab handles all initialization automatically. No additional code required!
+    </Info>
+  </Tab>
+
+  <Tab title="Option 2: Manual Setup">
+    For custom initialization flow or advanced use cases.
+
+    <Steps>
+      <Step title="Create GameObject">
+        Create an empty GameObject in your scene
+      </Step>
+      <Step title="Add Component">
+        Add the `GamerampSDK.cs` component to the GameObject
+      </Step>
+      <Step title="Assign Configuration">
+        Assign your `GamerampConfig` to the component's config field
+      </Step>
+      <Step title="Initialize in Code">
+        Call initialization methods before using any SDK features:
+
+        ```csharp
+        // 1. Initialize the SDK
+        Gameramp.Initialize(config);
+
+        // 2. Login the user
+        Gameramp.Login(
+            onSuccess: () => Debug.Log("Login successful!"),
+            onFail: () => Debug.LogError("Login failed!")
+        );
+        ```
+      </Step>
+    </Steps>
+
+    <Note>
+    With manual setup, ensure you call `Initialize()` and `Login()` before using any other SDK features.
+    </Note>
+  </Tab>
+</Tabs>
+
+## Verification
+
+After initialization, verify the SDK is working:
+
+<CodeGroup>
+```csharp Unity Console
+// You should see this in the Unity Console
+"GameRamp SDK Initialized Successfully"
+"Login successful!"
+```
+
+```csharp Test Code
+// Test the SDK is working
+void Start() {
+    // Track a test event
+    Gameramp.TrackSessionStart();
+    Debug.Log("GameRamp SDK is working!");
+}
+```
+</CodeGroup>
+
+## What's Next?
+
+<CardGroup cols={2}>
+  <Card
+    title="Platform Configuration"
+    icon="mobile"
+    href="/sdks/unity/configuration"
+  >
+    Configure Android and iOS platform settings
+  </Card>
+  <Card
+    title="Analytics"
+    icon="chart-line"
+    href="/sdks/unity/analytics"
+  >
+    Start tracking user events and sessions
+  </Card>
+  <Card
+    title="Ads Integration"
+    icon="rectangle-ad"
+    href="/sdks/unity/ads"
+  >
+    Track ad impressions and revenue
+  </Card>
+  <Card
+    title="In-App Purchases"
+    icon="credit-card"
+    href="/sdks/unity/iap"
+  >
+    Implement and track purchases
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="SDK not initializing">
+    - Verify your SDK Key and Secret Key are correctly entered
+    - Check the Unity Console for error messages
+    - Ensure the config asset is assigned to your GameObject/Prefab
+  </Accordion>
+
+  <Accordion title="Can't find Create → Gameramp menu">
+    - Confirm the SDK was imported successfully
+    - Check if `GamerampSDK/` folder exists in your project
+    - Try reimporting the package
+  </Accordion>
+
+  <Accordion title="Login failing">
+    - Verify internet connection
+    - Check your credentials are valid
+    - Ensure Initialize() is called before Login()
+  </Accordion>
+</AccordionGroup>

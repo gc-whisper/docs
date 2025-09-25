@@ -1,80 +1,187 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: "Quick Start"
+description: "Get started with GameRamp SDK in 3 simple steps"
+icon: "rocket"
 ---
 
-## Get started in three steps
+# Quick Start Guide
 
-Get your documentation site running locally and make your first customization.
+Get the GameRamp Unity SDK up and running in your game in just a few minutes.
 
-### Step 1: Set up your local environment
+## Prerequisites
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
+Before you begin, make sure you have:
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Unity 2021.3+" icon="unity">
+    Unity 2021.3 LTS or higher installed
+  </Card>
+  <Card title="GameRamp Account" icon="user">
+    SDK credentials from GameRamp
+  </Card>
 </CardGroup>
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  Don't have credentials yet? [Contact us](mailto:connect@gameramp.com) to get started.
 </Note>
+
+## Step 1: Import the SDK
+
+<Steps>
+  <Step title="Download Package">
+    Download the GameRamp SDK (.unitypackage) from your dashboard
+  </Step>
+  <Step title="Import in Unity">
+    In Unity: **Assets → Import Package → Custom Package**
+  </Step>
+  <Step title="Verify Installation">
+    Confirm the `GamerampSDK/` folder appears in your project
+  </Step>
+</Steps>
+
+## Step 2: Configure
+
+<Steps>
+  <Step title="Create Config">
+    Right-click in Project window: **Create → Gameramp → SDKConfig**
+  </Step>
+  <Step title="Add Credentials">
+    Enter your SDK Key and Secret Key in the Inspector
+  </Step>
+</Steps>
+
+<Warning>
+  Keep your Secret Key secure. Never commit it to public repositories.
+</Warning>
+
+## Step 3: Initialize
+
+<Tabs>
+  <Tab title="Using Prefab (Easiest)">
+    1. Drag `Gameramp.prefab` from `GamerampSDK/Prefabs/` into your scene
+    2. Assign your config to the prefab
+    3. That's it! The SDK auto-initializes
+
+    ```csharp
+    // No code needed! The prefab handles everything
+    ```
+  </Tab>
+  <Tab title="Manual Setup">
+    ```csharp
+    // 1. Initialize the SDK
+    Gameramp.Initialize(config);
+
+    // 2. Login
+    Gameramp.Login(
+        onSuccess: () => Debug.Log("Ready!"),
+        onFail: () => Debug.LogError("Login failed")
+    );
+    ```
+  </Tab>
+</Tabs>
+
+## Start Using GameRamp
+
+Once initialized, you can start tracking:
+
+<CodeGroup>
+```csharp Analytics
+// Track session start
+Gameramp.TrackSessionStart();
+
+// Track first open
+Gameramp.TrackFirstOpen("organic", "direct");
+```
+
+```csharp Ads
+// Track ad impressions
+Gameramp.TrackBannerAd("menu_banner", "campaign_id");
+Gameramp.TrackInterstitialAd("level_complete", "campaign_id");
+Gameramp.TrackRewardedAd("extra_life", "campaign_id");
+```
+
+```csharp IAP
+// Fetch products
+Gameramp.FetchStoreProducts(
+    (products) => {
+        // Display products
+    },
+    (error) => {
+        // Handle error
+    }
+);
+
+// Make purchase
+Gameramp.InitiatePurchase("product_id",
+    onSuccess: (purchase) => {
+        // Grant item
+    },
+    onFailed: (error) => {
+        // Handle error
+    }
+);
+```
+</CodeGroup>
+
+## Platform Setup
+
+<Tabs>
+  <Tab title="Android">
+    - Minimum API Level 24 (Android 7.0)
+    - Enable custom mainTemplate.gradle
+    - Permissions auto-added
+  </Tab>
+  <Tab title="iOS">
+    - Minimum iOS 12.0
+    - StoreKit auto-included
+    - Configure in Player Settings
+  </Tab>
+  <Tab title="IL2CPP">
+    - Move `link.xml` to Assets/ root
+    - Prevents code stripping
+    - Required for builds
+  </Tab>
+</Tabs>
+
+## What's Next?
+
+<CardGroup cols={2}>
+  <Card
+    title="Unity SDK Guide"
+    icon="book"
+    href="/sdks/unity/introduction"
+  >
+    Complete SDK documentation
+  </Card>
+  <Card
+    title="Configuration"
+    icon="gear"
+    href="/sdks/unity/configuration"
+  >
+    Platform-specific settings
+  </Card>
+  <Card
+    title="Analytics"
+    icon="chart-line"
+    href="/sdks/unity/analytics"
+  >
+    Track user events
+  </Card>
+  <Card
+    title="Troubleshooting"
+    icon="wrench"
+    href="/guides/troubleshooting"
+  >
+    Common issues
+  </Card>
+</CardGroup>
+
+## Need Help?
+
+<Card
+  title="Contact Support"
+  icon="life-ring"
+  href="mailto:connect@gameramp.com"
+>
+  Our team is here to help with your integration
+</Card>

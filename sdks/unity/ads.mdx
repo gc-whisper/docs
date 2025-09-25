@@ -1,0 +1,334 @@
+---
+title: 'Ads Tracking'
+description: 'Track banner, interstitial, and rewarded ad impressions'
+icon: 'rectangle-ad'
+---
+
+# Ads Tracking
+
+Monitor ad performance across different ad formats to optimize your monetization strategy.
+
+## Supported Ad Formats
+
+<CardGroup cols={3}>
+  <Card title="Banner Ads" icon="rectangle-wide">
+    Persistent ads shown at screen edges
+  </Card>
+  <Card title="Interstitial Ads" icon="square">
+    Full-screen ads between content
+  </Card>
+  <Card title="Rewarded Ads" icon="gift">
+    Opt-in ads with in-game rewards
+  </Card>
+</CardGroup>
+
+## Banner Ads
+
+Track banner ad impressions to measure visibility and engagement.
+
+```csharp
+Gameramp.TrackBannerAd(string adId, string campaignId);
+```
+
+### Parameters
+
+<ParamField path="adId" type="string" required>
+  Unique identifier for the ad placement (e.g., "main_menu_banner", "game_over_banner")
+</ParamField>
+
+<ParamField path="campaignId" type="string" required>
+  Campaign or ad network identifier (e.g., "admob_campaign_123", "unity_ads_summer")
+</ParamField>
+
+### Implementation Example
+
+<CodeGroup>
+```csharp Basic Banner Tracking
+// Track when banner is displayed
+void ShowBanner() {
+    // Your banner display code
+    bannerAd.Show();
+
+    // Track the impression
+    Gameramp.TrackBannerAd("main_menu_banner", "admob_default");
+}
+```
+
+```csharp Advanced Banner Tracking
+public class BannerAdManager : MonoBehaviour {
+    private string currentPlacement;
+    private string currentCampaign;
+
+    public void OnBannerLoaded(string placement, string campaign) {
+        currentPlacement = placement;
+        currentCampaign = campaign;
+    }
+
+    public void OnBannerShown() {
+        // Track impression
+        Gameramp.TrackBannerAd(currentPlacement, currentCampaign);
+
+        // Log for debugging
+        Debug.Log($"Banner shown: {currentPlacement} - {currentCampaign}");
+    }
+}
+```
+</CodeGroup>
+
+## Interstitial Ads
+
+Track full-screen interstitial ad impressions.
+
+```csharp
+Gameramp.TrackInterstitialAd(string adId, string campaignId);
+```
+
+### Implementation Example
+
+<CodeGroup>
+```csharp Level Complete Interstitial
+// Show interstitial after level completion
+void OnLevelComplete() {
+    // Show the ad
+    ShowInterstitialAd();
+
+    // Track the impression
+    Gameramp.TrackInterstitialAd(
+        "level_complete_interstitial",
+        "unity_ads_levelup"
+    );
+}
+```
+
+```csharp Timed Interstitial
+public class InterstitialManager : MonoBehaviour {
+    private float timeSinceLastAd = 0f;
+    private const float AD_INTERVAL = 180f; // 3 minutes
+
+    void Update() {
+        timeSinceLastAd += Time.deltaTime;
+    }
+
+    public void TryShowInterstitial() {
+        if (timeSinceLastAd >= AD_INTERVAL) {
+            ShowAd();
+            Gameramp.TrackInterstitialAd(
+                "timed_interstitial",
+                GetCurrentCampaign()
+            );
+            timeSinceLastAd = 0f;
+        }
+    }
+}
+```
+</CodeGroup>
+
+## Rewarded Ads
+
+Track rewarded video ad impressions and completions.
+
+```csharp
+Gameramp.TrackRewardedAd(string adId, string campaignId);
+```
+
+### Implementation Example
+
+<CodeGroup>
+```csharp Simple Rewarded Ad
+// Player watches ad for extra life
+void OnWatchAdForLife() {
+    // Show rewarded ad
+    ShowRewardedAd();
+
+    // Track when ad starts
+    Gameramp.TrackRewardedAd("extra_life_rewarded", "admob_rewards");
+
+    // Grant reward on completion
+    OnAdCompleted(() => {
+        playerLives++;
+    });
+}
+```
+
+```csharp Complete Rewarded Ad Flow
+public class RewardedAdController : MonoBehaviour {
+    private bool isAdReady = false;
+    private string currentPlacement;
+
+    public void LoadRewardedAd(string placement) {
+        currentPlacement = placement;
+        // Load ad from your ad network
+        AdNetwork.LoadRewardedAd(() => {
+            isAdReady = true;
+        });
+    }
+
+    public void ShowRewardedAd(Action onComplete) {
+        if (!isAdReady) return;
+
+        // Track ad impression
+        Gameramp.TrackRewardedAd(
+            currentPlacement,
+            GetCampaignId()
+        );
+
+        // Show ad and handle completion
+        AdNetwork.ShowRewardedAd(() => {
+            onComplete?.Invoke();
+            isAdReady = false;
+        });
+    }
+}
+```
+
+```csharp Multiple Reward Types
+public enum RewardType {
+    Coins,
+    Gems,
+    Energy,
+    PowerUp
+}
+
+public void TrackRewardedAdByType(RewardType type) {
+    string adId = $"reward_{type.ToString().ToLower()}";
+    string campaign = GetActiveCampaign();
+
+    // Track with specific reward type
+    Gameramp.TrackRewardedAd(adId, campaign);
+
+    // Grant appropriate reward
+    GrantReward(type);
+}
+```
+</CodeGroup>
+
+## Best Practices
+
+<Steps>
+  <Step title="Unique Ad IDs">
+    Use descriptive, unique IDs for different ad placements to track performance by location
+  </Step>
+  <Step title="Campaign Tracking">
+    Include campaign or network info to compare performance across providers
+  </Step>
+  <Step title="Timing">
+    Track impressions when ads are actually shown, not when loaded
+  </Step>
+  <Step title="Error Handling">
+    Only track successful ad displays, not failed attempts
+  </Step>
+</Steps>
+
+## Ad Placement Strategies
+
+<Tabs>
+  <Tab title="Banner Placement">
+    <Info>
+    **Recommended Placements:**
+    - Main menu (top or bottom)
+    - During gameplay (non-intrusive areas)
+    - Results/leaderboard screens
+
+    **Avoid:**
+    - Covering important UI elements
+    - During intense gameplay moments
+    </Info>
+  </Tab>
+
+  <Tab title="Interstitial Timing">
+    <Info>
+    **Good Times to Show:**
+    - Between levels/stages
+    - After game over
+    - When returning to main menu
+    - Natural pause points
+
+    **Avoid:**
+    - Mid-gameplay
+    - During tutorials
+    - Too frequently (respect user experience)
+    </Info>
+  </Tab>
+
+  <Tab title="Rewarded Opportunities">
+    <Info>
+    **Popular Rewards:**
+    - Continue after game over
+    - Double coins/points
+    - Unlock special items
+    - Skip difficult levels
+    - Extra lives/energy
+
+    **Best Practices:**
+    - Make rewards valuable
+    - Clearly show the reward
+    - Always optional
+    </Info>
+  </Tab>
+</Tabs>
+
+## Debugging Ad Tracking
+
+```csharp
+// Enable debug logging
+GRLogger.IsLoggingEnabled = true;
+
+// Test tracking
+void TestAdTracking() {
+    Gameramp.TrackBannerAd("test_banner", "debug_campaign");
+    Gameramp.TrackInterstitialAd("test_interstitial", "debug_campaign");
+    Gameramp.TrackRewardedAd("test_rewarded", "debug_campaign");
+
+    // Check Unity Console for confirmation logs
+}
+```
+
+## Common Ad Networks Integration
+
+<AccordionGroup>
+  <Accordion title="AdMob">
+    ```csharp
+    // AdMob banner example
+    private void OnBannerAdLoaded() {
+        Gameramp.TrackBannerAd("admob_banner", admobAdUnit.Id);
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Unity Ads">
+    ```csharp
+    // Unity Ads interstitial example
+    public void OnUnityAdsShowComplete(string placementId) {
+        Gameramp.TrackInterstitialAd(placementId, "unity_ads");
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="IronSource">
+    ```csharp
+    // IronSource rewarded example
+    public void OnRewardedVideoAdRewarded() {
+        Gameramp.TrackRewardedAd("ironsource_rewarded", placementName);
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="In-App Purchases"
+    icon="credit-card"
+    href="/sdks/unity/iap"
+  >
+    Implement purchase tracking
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/sdks/unity/api-reference"
+  >
+    Complete method documentation
+  </Card>
+</CardGroup>
