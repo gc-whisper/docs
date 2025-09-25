@@ -1,33 +1,174 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: 'API Overview'
+description: 'RESTful API for event tracking and player configurations'
+icon: 'code'
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+# GameRamp API Documentation
 
-## Welcome
+The GameRamp API provides programmatic access to track player events and retrieve personalized configurations and predictions.
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+## Base URL
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+All API requests should be made to:
+
+```
+https://api.gameramp.com
+```
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Event Tracking" icon="chart-line">
+    Send click-stream events and player behavior data
+  </Card>
+  <Card title="Player Predictions" icon="brain">
+    Get AI-powered player predictions and segments
+  </Card>
+  <Card title="Store Configs" icon="shopping-cart">
+    Retrieve personalized store configurations
+  </Card>
+  <Card title="JWT Authentication" icon="shield">
+    Secure authentication with signed requests
+  </Card>
+</CardGroup>
+
+## API Categories
+
+### Authentication APIs
+APIs for managing authentication and tokens:
+
+- **[Login](/api-reference/authentication)** - Authenticate and obtain JWT tokens
+- **[Refresh Token](/api-reference/endpoints/auth/refresh)** - Refresh expired access tokens
+- **[Logout](/api-reference/endpoints/auth/logout)** - Invalidate active tokens
+
+### Data Transfer APIs
+APIs for sending data to GameRamp:
+
+- **[Events](/api-reference/endpoints/events)** - Track player events and behaviors
+
+### Configuration APIs
+APIs for retrieving predictions and configurations:
+
+- **[Player Status](/api-reference/endpoints/player/status)** - Get player predictions (e.g., isPayer)
+- **[Store Configs](/api-reference/endpoints/player/store-configs)** - Get personalized store products
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+All API endpoints require authentication using JWT tokens obtained through the login endpoint.
 
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+<Steps>
+  <Step title="Obtain Credentials">
+    Get your API Key and Secret from GameRamp
+  </Step>
+  <Step title="Generate Signature">
+    Create HMAC-SHA256 signature with your Secret
+  </Step>
+  <Step title="Login">
+    Exchange signature for JWT tokens
+  </Step>
+  <Step title="Make API Calls">
+    Use JWT token in Authorization header
+  </Step>
+</Steps>
+
+## Quick Start
+
+<CodeGroup>
+```bash Login
+curl -X POST 'https://api.gameramp.com/auth/login' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "apiKey": "your_api_key",
+    "deviceId": "unique_device_id",
+    "timestamp": "2025-01-15T10:00:00Z",
+    "signature": "base64_encoded_signature"
+  }'
 ```
+
+```bash Use Token
+curl -X GET 'https://api.gameramp.com/v1/player/status' \
+  -H 'Authorization: Bearer YOUR_JWT_TOKEN' \
+  -H 'X-Tenant-Id: your_tenant_id' \
+  -H 'X-Game-Id: your_game_id' \
+  -H 'X-Player-Id: player_123'
+```
+</CodeGroup>
+
+## Response Format
+
+All API responses follow a consistent JSON format:
+
+### Success Response
+```json
+{
+  "data": { ... },
+  "status": "success"
+}
+```
+
+### Error Response
+```json
+{
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human readable error message"
+  },
+  "status": "error"
+}
+```
+
+## Rate Limiting
+
+API requests are subject to rate limiting to ensure fair usage. Current limits:
+
+- **Authentication**: 10 requests per minute
+- **Data APIs**: 1000 requests per minute
+- **Configuration APIs**: 100 requests per minute
+
+## Development Environment
+
+For testing and development, use these credentials:
+
+<Warning>
+These are test credentials only. Never use them in production.
+</Warning>
+
+<CodeGroup>
+```json Credentials
+{
+  "apiKey": "test_tenant_4Dqms3ygG9FVC",
+  "apiSecret": "b815ebac-9744-43db-b5e6-89f90620297e-Wjl8qlWrJn2r4OEB7UXJ_L8iYOLTR8p10t83Wi_79Q"
+}
+```
+</CodeGroup>
+
+## SDK Support
+
+For easier integration, use our official SDKs:
+
+<CardGroup cols={2}>
+  <Card
+    title="Unity SDK"
+    icon="unity"
+    href="/sdks/unity/introduction"
+  >
+    Complete Unity integration with prefab support
+  </Card>
+  <Card
+    title="Coming Soon"
+    icon="ellipsis"
+  >
+    More SDKs in development
+  </Card>
+</CardGroup>
+
+## Need Help?
+
+<Card
+  title="Contact Support"
+  icon="life-ring"
+  href="mailto:connect@gameramp.com"
+>
+  Our team is here to help with your API integration
+</Card>

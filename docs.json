@@ -64,9 +64,32 @@
         "tab": "API Reference",
         "groups": [
           {
-            "group": "Documentation",
+            "group": "Getting Started",
             "pages": [
-              "api-reference/introduction"
+              "api-reference/introduction",
+              "api-reference/authentication",
+              "api-reference/testing"
+            ]
+          },
+          {
+            "group": "Authentication",
+            "pages": [
+              "api-reference/endpoints/auth/login",
+              "api-reference/endpoints/auth/refresh",
+              "api-reference/endpoints/auth/logout"
+            ]
+          },
+          {
+            "group": "Events",
+            "pages": [
+              "api-reference/endpoints/events"
+            ]
+          },
+          {
+            "group": "Player",
+            "pages": [
+              "api-reference/endpoints/player/status",
+              "api-reference/endpoints/player/store-configs"
             ]
           }
         ]

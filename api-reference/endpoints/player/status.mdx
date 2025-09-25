@@ -1,0 +1,457 @@
+---
+title: 'GET /v1/player/status'
+description: 'Get player predictions and status'
+---
+
+# Get Player Status
+
+Retrieve AI-powered player predictions and status information. This endpoint provides insights about player behavior, such as whether they are likely to make purchases.
+
+<Card title="Endpoint" icon="server">
+  ```
+  GET https://api.gameramp.com/v1/player/status
+  ```
+</Card>
+
+## Request
+
+### Headers
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token obtained from login
+  ```
+  Authorization: Bearer <JWT_TOKEN>
+  ```
+</ParamField>
+
+<ParamField header="X-Tenant-ID" type="string" required>
+  Your tenant/studio identifier
+</ParamField>
+
+<ParamField header="X-Game-Id" type="string" required>
+  Your game identifier
+</ParamField>
+
+<ParamField header="X-Player-Id" type="string" required>
+  The player identifier to get status for
+</ParamField>
+
+### Example Request
+
+<CodeGroup>
+```bash cURL
+curl -X GET 'https://api.gameramp.com/v1/player/status' \
+  -H 'Authorization: Bearer YOUR_JWT_TOKEN' \
+  -H 'X-Tenant-Id: test_tenant_1752523421' \
+  -H 'X-Game-Id: default_game' \
+  -H 'X-Player-Id: player_123'
+```
+
+```javascript Node.js
+async function getPlayerStatus(token, tenantId, gameId, playerId) {
+  const response = await fetch('https://api.gameramp.com/v1/player/status', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'X-Tenant-ID': tenantId,
+      'X-Game-Id': gameId,
+      'X-Player-Id': playerId
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to get player status: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+// Usage
+try {
+  const status = await getPlayerStatus(
+    'your-jwt-token',
+    'test_tenant_1752523421',
+    'default_game',
+    'player_123'
+  );
+
+  if (status.isPayer.value) {
+    console.log('Player is likely to make purchases');
+    // Show premium offers
+  } else {
+    console.log('Player is not likely to purchase');
+    // Show standard offers
+  }
+} catch (error) {
+  console.error('Error:', error);
+}
+```
+
+```python Python
+import requests
+
+def get_player_status(token, tenant_id, game_id, player_id):
+    response = requests.get(
+        'https://api.gameramp.com/v1/player/status',
+        headers={
+            'Authorization': f'Bearer {token}',
+            'X-Tenant-ID': tenant_id,
+            'X-Game-Id': game_id,
+            'X-Player-Id': player_id
+        }
+    )
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise Exception(f'Failed to get player status: {response.status_code}')
+
+# Usage
+try:
+    status = get_player_status(
+        'your-jwt-token',
+        'test_tenant_1752523421',
+        'default_game',
+        'player_123'
+    )
+
+    if status['isPayer']['value']:
+        print('Player is likely to make purchases')
+        # Show premium offers
+    else:
+        print('Player is not likely to purchase')
+        # Show standard offers
+
+except Exception as e:
+    print(f'Error: {e}')
+```
+
+```csharp Unity/C#
+using System.Collections;
+using UnityEngine;
+using UnityEngine.Networking;
+
+[System.Serializable]
+public class PlayerStatus
+{
+    [System.Serializable]
+    public class PayerPrediction
+    {
+        public bool value;
+        public bool defaultValue;
+        public string expiredAt;
+    }
+
+    public PayerPrediction isPayer;
+}
+
+public class PlayerStatusManager : MonoBehaviour
+{
+    public IEnumerator GetPlayerStatus(
+        string accessToken,
+        string tenantId,
+        string gameId,
+        string playerId,
+        System.Action<PlayerStatus> onSuccess,
+        System.Action<string> onError)
+    {
+        string url = "https://api.gameramp.com/v1/player/status";
+
+        using (UnityWebRequest request = UnityWebRequest.Get(url))
+        {
+            request.SetRequestHeader("Authorization", $"Bearer {accessToken}");
+            request.SetRequestHeader("X-Tenant-ID", tenantId);
+            request.SetRequestHeader("X-Game-Id", gameId);
+            request.SetRequestHeader("X-Player-Id", playerId);
+
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                string json = request.downloadHandler.text;
+                PlayerStatus status = JsonUtility.FromJson<PlayerStatus>(json);
+                onSuccess?.Invoke(status);
+
+                // Use prediction
+                if (status.isPayer.value)
+                {
+                    Debug.Log("Player is likely to purchase");
+                    ShowPremiumOffers();
+                }
+            }
+            else
+            {
+                onError?.Invoke(request.error);
+            }
+        }
+    }
+
+    void ShowPremiumOffers()
+    {
+        // Display premium store items
+    }
+}
+```
+</CodeGroup>
+
+## Response
+
+### Success Response (200 OK)
+
+```json
+{
+  "isPayer": {
+    "value": true,
+    "defaultValue": false,
+    "expiredAt": null
+  }
+}
+```
+
+### Response Fields
+
+<ResponseField name="isPayer" type="object">
+  Player payer prediction
+
+  <Expandable title="isPayer properties">
+    <ResponseField name="value" type="boolean" required>
+      The current prediction value. `true` indicates the player is likely to make purchases
+    </ResponseField>
+
+    <ResponseField name="defaultValue" type="boolean" required>
+      Default value to use if no prediction is available
+    </ResponseField>
+
+    <ResponseField name="expiredAt" type="string | null">
+      ISO 8601 timestamp when this prediction expires, or `null` if no expiration
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Additional Predictions (Future)
+
+<Note>
+More player predictions will be added in future updates, including:
+- Churn risk
+- Engagement level
+- Preferred play times
+- Content preferences
+</Note>
+
+## Error Responses
+
+### 401 Unauthorized
+
+Invalid or expired JWT token
+
+```json
+{
+  "error": "Invalid authentication token",
+  "status": "error"
+}
+```
+
+### 404 Not Found
+
+Player not found
+
+```json
+{
+  "error": "Player not found",
+  "status": "error"
+}
+```
+
+### 400 Bad Request
+
+Missing required headers
+
+```json
+{
+  "error": "Missing required header: X-Player-Id",
+  "status": "error"
+}
+```
+
+## Using Predictions
+
+### Payer Prediction Use Cases
+
+<Tabs>
+  <Tab title="Store Personalization">
+    ```javascript
+    // Personalize store based on payer prediction
+    function personalizeStore(playerStatus) {
+      if (playerStatus.isPayer.value) {
+        // Show premium bundles and high-value items
+        displayPremiumBundles();
+        highlightBestValueOffers();
+        showLimitedTimeDeals();
+      } else {
+        // Show starter packs and low-cost items
+        displayStarterPacks();
+        highlightFreeRewards();
+        showAdSupportedOptions();
+      }
+    }
+    ```
+  </Tab>
+
+  <Tab title="Ad Strategy">
+    ```javascript
+    // Adjust ad frequency based on payer status
+    function configureAds(playerStatus) {
+      if (playerStatus.isPayer.value) {
+        // Reduce or remove ads for likely payers
+        setAdFrequency('minimal');
+        disableInterstitialAds();
+      } else {
+        // Show ads for non-payers
+        setAdFrequency('normal');
+        enableRewardedAds();
+      }
+    }
+    ```
+  </Tab>
+
+  <Tab title="Engagement">
+    ```javascript
+    // Tailor engagement strategies
+    function engagePlayer(playerStatus) {
+      if (playerStatus.isPayer.value) {
+        // Premium player engagement
+        offerVIPSupport();
+        sendExclusiveContent();
+        provideEarlyAccess();
+      } else {
+        // Free player engagement
+        sendDailyRewards();
+        promoteEvents();
+        encourageSocialSharing();
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Caching Strategy
+
+<Warning>
+Player predictions should be cached appropriately to minimize API calls while ensuring data freshness.
+</Warning>
+
+### Recommended Caching
+
+```javascript
+class PlayerStatusCache {
+  constructor() {
+    this.cache = new Map();
+    this.cacheTimeout = 3600000; // 1 hour in milliseconds
+  }
+
+  async getStatus(playerId, fetchFunction) {
+    const cached = this.cache.get(playerId);
+
+    // Check if cache is valid
+    if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+      // Check if prediction hasn't expired
+      if (!cached.data.isPayer.expiredAt ||
+          new Date(cached.data.isPayer.expiredAt) > new Date()) {
+        return cached.data;
+      }
+    }
+
+    // Fetch fresh data
+    const freshData = await fetchFunction(playerId);
+
+    // Cache the result
+    this.cache.set(playerId, {
+      data: freshData,
+      timestamp: Date.now()
+    });
+
+    return freshData;
+  }
+
+  invalidate(playerId) {
+    this.cache.delete(playerId);
+  }
+}
+
+// Usage
+const statusCache = new PlayerStatusCache();
+
+async function getPlayerStatusCached(playerId) {
+  return statusCache.getStatus(playerId, async (id) => {
+    // Fetch from API
+    return await fetchPlayerStatusFromAPI(id);
+  });
+}
+```
+
+## Testing
+
+Test player status retrieval:
+
+```bash
+# Get JWT token
+TOKEN=$(curl -X POST 'http://api.gameramp.com/auth/login' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "apiKey": "test_tenant_4Dqms3ygG9FVC",
+    "deviceId": "device-123",
+    "timestamp": "2025-07-15T19:44:26Z",
+    "signature": "/Sn9msNKK4ifTEYrGC/GKpRptolLIyWi4jsfdn5S4g8="
+  }' | jq -r '.accessToken')
+
+# Get player status
+curl -X GET 'http://api.gameramp.com/v1/player/status' \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'X-Tenant-Id: test_tenant_1752523421' \
+  -H 'X-Game-Id: default_game' \
+  -H 'X-Player-Id: test_player_123'
+```
+
+Expected response:
+```json
+{"isPayer":{"value":true,"defaultValue":false,"expiredAt":null}}
+```
+
+## Best Practices
+
+<Steps>
+  <Step title="Cache Appropriately">
+    Cache predictions for 1-6 hours depending on your use case
+  </Step>
+  <Step title="Handle Defaults">
+    Always implement fallback behavior using `defaultValue`
+  </Step>
+  <Step title="Monitor Expiration">
+    Check `expiredAt` and refresh predictions when needed
+  </Step>
+  <Step title="Track Impact">
+    Measure the impact of using predictions on your KPIs
+  </Step>
+  <Step title="Gradual Rollout">
+    Test predictions with a subset of players first
+  </Step>
+</Steps>
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card
+    title="Store Configs"
+    icon="shopping-cart"
+    href="/api-reference/endpoints/player/store-configs"
+  >
+    Get personalized store configurations
+  </Card>
+  <Card
+    title="Events API"
+    icon="chart-line"
+    href="/api-reference/endpoints/events"
+  >
+    Send player behavior data
+  </Card>
+</CardGroup>

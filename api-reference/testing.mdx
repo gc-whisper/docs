@@ -1,0 +1,541 @@
+---
+title: 'Testing Guide'
+description: 'Test GameRamp APIs with development credentials'
+icon: 'flask-vial'
+---
+
+# API Testing Guide
+
+This guide provides everything you need to test the GameRamp API in development environment.
+
+## Development Credentials
+
+<Warning>
+These credentials are for testing only. Never use them in production applications.
+</Warning>
+
+```json
+{
+  "apiKey": "test_tenant_4Dqms3ygG9FVC",
+  "apiSecret": "b815ebac-9744-43db-b5e6-89f90620297e-Wjl8qlWrJn2r4OEB7UXJ_L8iYOLTR8p10t83Wi_79Q",
+  "tenantId": "test_tenant_1752523421",
+  "gameId": "default_game"
+}
+```
+
+## Quick Start Testing
+
+### Step 1: Generate Test Signature
+
+<CodeGroup>
+```bash Bash
+# Generate signature for testing
+API_KEY="test_tenant_4Dqms3ygG9FVC"
+API_SECRET="b815ebac-9744-43db-b5e6-89f90620297e-Wjl8qlWrJn2r4OEB7UXJ_L8iYOLTR8p10t83Wi_79Q"
+DEVICE_ID="device-123"
+TIMESTAMP="2025-07-15T19:44:26Z"
+
+# Create payload
+PAYLOAD="${API_KEY}|${DEVICE_ID}|${TIMESTAMP}"
+
+# Generate signature (requires openssl)
+SIGNATURE=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "$API_SECRET" -binary | base64)
+
+echo "Signature: $SIGNATURE"
+# Output: /Sn9msNKK4ifTEYrGC/GKpRptolLIyWi4jsfdn5S4g8=
+```
+
+```javascript Node.js
+const crypto = require('crypto');
+
+const apiKey = 'test_tenant_4Dqms3ygG9FVC';
+const apiSecret = 'b815ebac-9744-43db-b5e6-89f90620297e-Wjl8qlWrJn2r4OEB7UXJ_L8iYOLTR8p10t83Wi_79Q';
+const deviceId = 'device-123';
+const timestamp = '2025-07-15T19:44:26Z';
+
+const payload = `${apiKey}|${deviceId}|${timestamp}`;
+const signature = crypto
+  .createHmac('sha256', apiSecret)
+  .update(payload)
+  .digest('base64');
+
+console.log('Signature:', signature);
+// Output: /Sn9msNKK4ifTEYrGC/GKpRptolLIyWi4jsfdn5S4g8=
+```
+
+```python Python
+import hmac
+import hashlib
+import base64
+
+api_key = 'test_tenant_4Dqms3ygG9FVC'
+api_secret = 'b815ebac-9744-43db-b5e6-89f90620297e-Wjl8qlWrJn2r4OEB7UXJ_L8iYOLTR8p10t83Wi_79Q'
+device_id = 'device-123'
+timestamp = '2025-07-15T19:44:26Z'
+
+payload = f"{api_key}|{device_id}|{timestamp}"
+signature = base64.b64encode(
+    hmac.new(
+        api_secret.encode('utf-8'),
+        payload.encode('utf-8'),
+        hashlib.sha256
+    ).digest()
+).decode('utf-8')
+
+print(f"Signature: {signature}")
+# Output: /Sn9msNKK4ifTEYrGC/GKpRptolLIyWi4jsfdn5S4g8=
+```
+</CodeGroup>
+
+### Step 2: Login and Get Token
+
+```bash
+curl -X POST 'http://api.gameramp.com/auth/login' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "apiKey": "test_tenant_4Dqms3ygG9FVC",
+    "deviceId": "device-123",
+    "timestamp": "2025-07-15T19:44:26Z",
+    "signature": "/Sn9msNKK4ifTEYrGC/GKpRptolLIyWi4jsfdn5S4g8="
+  }'
+```
+
+### Step 3: Use the Token
+
+```bash
+# Store the access token from login response
+ACCESS_TOKEN="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+# Use it in API calls
+curl -X GET 'http://api.gameramp.com/v1/player/status' \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H 'X-Tenant-Id: test_tenant_1752523421' \
+  -H 'X-Game-Id: default_game' \
+  -H 'X-Player-Id: test_player_123'
+```
+
+## Complete Test Flow
+
+### Full API Test Script
+
+<CodeGroup>
+```bash Complete Test Script
+#!/bin/bash
+
+# Configuration
+API_BASE="http://api.gameramp.com"
+API_KEY="test_tenant_4Dqms3ygG9FVC"
+API_SECRET="b815ebac-9744-43db-b5e6-89f90620297e-Wjl8qlWrJn2r4OEB7UXJ_L8iYOLTR8p10t83Wi_79Q"
+DEVICE_ID="device-$(date +%s)"
+TENANT_ID="test_tenant_1752523421"
+GAME_ID="default_game"
+PLAYER_ID="test_player_123"
+
+echo "🚀 GameRamp API Test Suite"
+echo "=========================="
+
+# Step 1: Generate signature
+echo "1. Generating signature..."
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+PAYLOAD="${API_KEY}|${DEVICE_ID}|${TIMESTAMP}"
+SIGNATURE=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "$API_SECRET" -binary | base64)
+echo "   ✓ Signature generated"
+
+# Step 2: Login
+echo "2. Logging in..."
+LOGIN_RESPONSE=$(curl -s -X POST "${API_BASE}/auth/login" \
+  -H 'Content-Type: application/json' \
+  -d "{
+    \"apiKey\": \"${API_KEY}\",
+    \"deviceId\": \"${DEVICE_ID}\",
+    \"timestamp\": \"${TIMESTAMP}\",
+    \"signature\": \"${SIGNATURE}\"
+  }")
+
+ACCESS_TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.accessToken')
+REFRESH_TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.refreshToken')
+
+if [ "$ACCESS_TOKEN" = "null" ]; then
+  echo "   ✗ Login failed"
+  echo "$LOGIN_RESPONSE" | jq
+  exit 1
+fi
+
+echo "   ✓ Login successful"
+echo "   Access Token: ${ACCESS_TOKEN:0:50}..."
+
+# Step 3: Get Player Status
+echo "3. Getting player status..."
+STATUS_RESPONSE=$(curl -s -X GET "${API_BASE}/v1/player/status" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "X-Tenant-Id: $TENANT_ID" \
+  -H "X-Game-Id: $GAME_ID" \
+  -H "X-Player-Id: $PLAYER_ID")
+
+IS_PAYER=$(echo "$STATUS_RESPONSE" | jq -r '.isPayer.value')
+echo "   ✓ Player status retrieved"
+echo "   Is Payer: $IS_PAYER"
+
+# Step 4: Get Store Configs
+echo "4. Getting store configurations..."
+STORE_RESPONSE=$(curl -s -X GET "${API_BASE}/v1/player/store_configs" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "X-Tenant-Id: $TENANT_ID" \
+  -H "X-Game-Id: $GAME_ID" \
+  -H "X-Player-Id: $PLAYER_ID")
+
+SKU_COUNT=$(echo "$STORE_RESPONSE" | jq '.activeSkus | length')
+echo "   ✓ Store configs retrieved"
+echo "   Active SKUs: $SKU_COUNT"
+
+# Step 5: Send Events
+echo "5. Sending test events..."
+EVENT_RESPONSE=$(curl -s -X POST "${API_BASE}/v1/events" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -H "X-Tenant-ID: $TENANT_ID" \
+  -d "[
+    {
+      \"eventType\": \"session_start\",
+      \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)\",
+      \"payload\": {
+        \"userId\": \"$PLAYER_ID\",
+        \"sessionId\": \"test-session-$(date +%s)\"
+      },
+      \"metadata\": {
+        \"deviceType\": \"Test Device\",
+        \"osName\": \"Test OS\",
+        \"osVersion\": \"1.0\"
+      }
+    }
+  ]")
+
+EVENT_STATUS=$(echo "$EVENT_RESPONSE" | jq -r '.status')
+if [ "$EVENT_STATUS" = "success" ]; then
+  echo "   ✓ Events sent successfully"
+else
+  echo "   ✗ Event sending failed"
+fi
+
+# Step 6: Refresh Token
+echo "6. Testing token refresh..."
+REFRESH_RESPONSE=$(curl -s -X POST "${API_BASE}/auth/refresh" \
+  -H 'Content-Type: application/json' \
+  -d "{
+    \"refreshToken\": \"${REFRESH_TOKEN}\"
+  }")
+
+NEW_ACCESS_TOKEN=$(echo "$REFRESH_RESPONSE" | jq -r '.accessToken')
+if [ "$NEW_ACCESS_TOKEN" != "null" ]; then
+  echo "   ✓ Token refreshed successfully"
+else
+  echo "   ✗ Token refresh failed"
+fi
+
+# Step 7: Logout
+echo "7. Logging out..."
+LOGOUT_RESPONSE=$(curl -s -X POST "${API_BASE}/auth/logout" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d "{
+    \"deviceId\": \"${DEVICE_ID}\"
+  }")
+
+echo "   ✓ Logged out"
+
+echo ""
+echo "✅ All tests completed!"
+```
+</CodeGroup>
+
+## Testing Tools
+
+### Postman Collection
+
+Import this collection to test APIs in Postman:
+
+```json
+{
+  "info": {
+    "name": "GameRamp API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api.gameramp.com",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "test_tenant_4Dqms3ygG9FVC",
+      "type": "string"
+    },
+    {
+      "key": "tenant_id",
+      "value": "test_tenant_1752523421",
+      "type": "string"
+    },
+    {
+      "key": "game_id",
+      "value": "default_game",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"apiKey\": \"{{api_key}}\",\n  \"deviceId\": \"device-123\",\n  \"timestamp\": \"2025-07-15T19:44:26Z\",\n  \"signature\": \"/Sn9msNKK4ifTEYrGC/GKpRptolLIyWi4jsfdn5S4g8=\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["auth", "login"]
+        }
+      }
+    }
+  ]
+}
+```
+
+### cURL Examples
+
+<Tabs>
+  <Tab title="Login">
+    ```bash
+    curl -X POST 'http://api.gameramp.com/auth/login' \
+      -H 'Content-Type: application/json' \
+      -d '{
+        "apiKey": "test_tenant_4Dqms3ygG9FVC",
+        "deviceId": "device-123",
+        "timestamp": "2025-07-15T19:44:26Z",
+        "signature": "/Sn9msNKK4ifTEYrGC/GKpRptolLIyWi4jsfdn5S4g8="
+      }'
+    ```
+  </Tab>
+
+  <Tab title="Player Status">
+    ```bash
+    curl -X GET 'http://api.gameramp.com/v1/player/status' \
+      -H 'Authorization: Bearer YOUR_TOKEN' \
+      -H 'X-Tenant-Id: test_tenant_1752523421' \
+      -H 'X-Game-Id: default_game' \
+      -H 'X-Player-Id: test_player_123'
+    ```
+  </Tab>
+
+  <Tab title="Store Configs">
+    ```bash
+    curl -X GET 'http://api.gameramp.com/v1/player/store_configs' \
+      -H 'Authorization: Bearer YOUR_TOKEN' \
+      -H 'X-Tenant-Id: test_tenant_1752523421' \
+      -H 'X-Game-Id: default_game' \
+      -H 'X-Player-Id: test_player_123'
+    ```
+  </Tab>
+
+  <Tab title="Send Events">
+    ```bash
+    curl -X POST 'https://api.gameramp.com/v1/events' \
+      -H 'Authorization: Bearer YOUR_TOKEN' \
+      -H 'Content-Type: application/json' \
+      -H 'X-Tenant-ID: test_tenant_1752523421' \
+      -d '[
+        {
+          "eventType": "test_event",
+          "timestamp": "2025-07-23T10:13:56.000Z",
+          "payload": {
+            "test": true
+          },
+          "metadata": {}
+        }
+      ]'
+    ```
+  </Tab>
+</Tabs>
+
+## Common Testing Scenarios
+
+### Test Player Predictions
+
+```javascript
+// Test different player types
+async function testPlayerTypes() {
+  const playerIds = [
+    'high_value_player',
+    'new_player',
+    'churned_player',
+    'active_f2p_player'
+  ];
+
+  for (const playerId of playerIds) {
+    const status = await getPlayerStatus(token, tenantId, gameId, playerId);
+    console.log(`${playerId}: isPayer = ${status.isPayer.value}`);
+  }
+}
+```
+
+### Test Store Personalization
+
+```javascript
+// Test store configs for different players
+async function testStorePersonalization() {
+  const players = ['payer_123', 'non_payer_456'];
+
+  for (const playerId of players) {
+    const config = await getStoreConfigs(token, tenantId, gameId, playerId);
+
+    console.log(`Player ${playerId}:`);
+    console.log(`  SKU Count: ${config.activeSkus.length}`);
+
+    // Check for personalized pricing
+    const hasDiscounts = config.activeSkus.some(
+      sku => sku.offerPrice < sku.actualPrice
+    );
+    console.log(`  Has Discounts: ${hasDiscounts}`);
+  }
+}
+```
+
+### Test Event Batching
+
+```javascript
+// Test sending multiple events
+async function testEventBatching() {
+  const events = [];
+
+  // Generate test events
+  for (let i = 0; i < 10; i++) {
+    events.push({
+      eventType: 'test_event',
+      timestamp: new Date().toISOString(),
+      payload: {
+        eventNumber: i,
+        testRun: true
+      },
+      metadata: {
+        batchTest: true
+      }
+    });
+  }
+
+  const response = await sendEvents(token, tenantId, events);
+  console.log(`Processed ${response.processed} events`);
+}
+```
+
+## Debugging Tips
+
+<Steps>
+  <Step title="Check Token Expiration">
+    Tokens expire - use the `expiresIn` field to track expiration
+  </Step>
+  <Step title="Verify Headers">
+    Ensure all required headers are included in requests
+  </Step>
+  <Step title="Validate Timestamps">
+    Use UTC timestamps within 5 minutes of server time
+  </Step>
+  <Step title="Monitor Rate Limits">
+    Stay within API rate limits during testing
+  </Step>
+  <Step title="Use Logging">
+    Enable verbose logging to debug signature generation
+  </Step>
+</Steps>
+
+## Error Handling
+
+```javascript
+// Comprehensive error handling
+async function makeAPICall(endpoint, options) {
+  try {
+    const response = await fetch(endpoint, options);
+
+    if (!response.ok) {
+      switch (response.status) {
+        case 401:
+          console.error('Authentication failed - check token');
+          // Attempt token refresh
+          break;
+        case 400:
+          console.error('Bad request - check parameters');
+          break;
+        case 404:
+          console.error('Resource not found');
+          break;
+        case 429:
+          console.error('Rate limited - slow down requests');
+          break;
+        case 500:
+          console.error('Server error - retry later');
+          break;
+        default:
+          console.error(`Unexpected status: ${response.status}`);
+      }
+
+      const error = await response.text();
+      console.error('Error details:', error);
+      throw new Error(`API call failed: ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('Network error:', error);
+    throw error;
+  }
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="API Reference"
+    icon="book"
+    href="/api-reference/introduction"
+  >
+    Complete API documentation
+  </Card>
+  <Card
+    title="Unity SDK"
+    icon="unity"
+    href="/sdks/unity/introduction"
+  >
+    Integrate with Unity
+  </Card>
+  <Card
+    title="Authentication"
+    icon="lock"
+    href="/api-reference/authentication"
+  >
+    Learn about authentication
+  </Card>
+  <Card
+    title="Support"
+    icon="life-ring"
+    href="mailto:connect@gameramp.com"
+  >
+    Get help from our team
+  </Card>
+</CardGroup>

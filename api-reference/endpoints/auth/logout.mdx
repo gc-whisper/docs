@@ -1,0 +1,365 @@
+---
+title: 'POST /auth/logout'
+description: 'Logout device and invalidate tokens'
+---
+
+# Logout Device
+
+Logs out a device by invalidating its active tokens. This endpoint requires authentication with a valid JWT token.
+
+<Card title="Endpoint" icon="server">
+  ```
+  POST https://api.gameramp.com/auth/logout
+  ```
+</Card>
+
+## Request
+
+### Headers
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token obtained from login
+  ```
+  Authorization: Bearer <accessToken>
+  ```
+</ParamField>
+
+<ParamField header="Content-Type" type="string" required>
+  Must be `application/json`
+</ParamField>
+
+### Body Parameters
+
+<ParamField body="deviceId" type="string" required>
+  The device identifier to logout
+</ParamField>
+
+### Example Request
+
+<CodeGroup>
+```bash cURL
+curl -X POST 'https://api.gameramp.com/auth/logout' \
+  -H 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "deviceId": "device-123"
+  }'
+```
+
+```javascript Node.js
+async function logoutDevice(accessToken, deviceId) {
+  const response = await fetch('https://api.gameramp.com/auth/logout', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      deviceId: deviceId
+    })
+  });
+
+  if (response.ok) {
+    console.log('Logout successful');
+    // Clear local tokens
+    clearStoredTokens();
+  } else {
+    console.error('Logout failed');
+  }
+}
+
+function clearStoredTokens() {
+  // Clear tokens from local storage/memory
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  // Clear from memory/state management
+  tokenManager.clearTokens();
+}
+```
+
+```python Python
+import requests
+
+def logout_device(access_token, device_id):
+    response = requests.post(
+        'https://api.gameramp.com/auth/logout',
+        headers={
+            'Authorization': f'Bearer {access_token}',
+            'Content-Type': 'application/json'
+        },
+        json={
+            'deviceId': device_id
+        }
+    )
+
+    if response.status_code == 200:
+        print('Logout successful')
+        # Clear local tokens
+        clear_stored_tokens()
+        return True
+    else:
+        print(f'Logout failed: {response.status_code}')
+        return False
+
+def clear_stored_tokens():
+    # Clear tokens from your storage mechanism
+    # Example: clear from session, database, or cache
+    pass
+```
+
+```csharp Unity/C#
+using System;
+using UnityEngine;
+using UnityEngine.Networking;
+using System.Collections;
+
+public class LogoutManager : MonoBehaviour
+{
+    public IEnumerator LogoutDevice(string accessToken, string deviceId)
+    {
+        var request = new UnityWebRequest(
+            "https://api.gameramp.com/auth/logout",
+            "POST"
+        );
+
+        string jsonBody = JsonUtility.ToJson(new {
+            deviceId = deviceId
+        });
+
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
+
+        request.SetRequestHeader("Authorization", $"Bearer {accessToken}");
+        request.SetRequestHeader("Content-Type", "application/json");
+
+        yield return request.SendWebRequest();
+
+        if (request.result == UnityWebRequest.Result.Success)
+        {
+            Debug.Log("Logout successful");
+            // Clear local tokens
+            PlayerPrefs.DeleteKey("accessToken");
+            PlayerPrefs.DeleteKey("refreshToken");
+            PlayerPrefs.Save();
+        }
+        else
+        {
+            Debug.LogError($"Logout failed: {request.error}");
+        }
+    }
+}
+```
+</CodeGroup>
+
+## Response
+
+### Success Response (200 OK)
+
+```json
+{
+  "message": "Device logged out successfully",
+  "status": "success"
+}
+```
+
+### Response Fields
+
+<ResponseField name="message" type="string">
+  Confirmation message indicating successful logout
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Status of the operation ("success")
+</ResponseField>
+
+## Error Responses
+
+### 401 Unauthorized
+
+Invalid or expired access token
+
+```json
+{
+  "error": "Invalid authentication token",
+  "status": "error"
+}
+```
+
+### 400 Bad Request
+
+Invalid request format or missing deviceId
+
+```json
+{
+  "error": "Invalid request: deviceId is required",
+  "status": "error"
+}
+```
+
+### 404 Not Found
+
+Device not found or already logged out
+
+```json
+{
+  "error": "Device not found",
+  "status": "error"
+}
+```
+
+## Logout Flow
+
+<Steps>
+  <Step title="Call Logout Endpoint">
+    Send logout request with valid access token and device ID
+  </Step>
+  <Step title="Server Invalidates Tokens">
+    Server invalidates all tokens associated with the device
+  </Step>
+  <Step title="Clear Local Storage">
+    Clear tokens from local storage/memory on client
+  </Step>
+  <Step title="Redirect to Login">
+    Redirect user to login screen or initial app state
+  </Step>
+</Steps>
+
+## Implementation Best Practices
+
+### Complete Logout Implementation
+
+<CodeGroup>
+```javascript Complete Logout Flow
+class AuthManager {
+  constructor() {
+    this.accessToken = null;
+    this.refreshToken = null;
+    this.deviceId = null;
+  }
+
+  async logout() {
+    try {
+      // 1. Call logout endpoint if we have a valid token
+      if (this.accessToken && this.deviceId) {
+        await this.callLogoutEndpoint();
+      }
+    } catch (error) {
+      console.error('Logout endpoint error:', error);
+      // Continue with local cleanup even if server logout fails
+    } finally {
+      // 2. Always clear local state
+      this.clearLocalState();
+
+      // 3. Redirect to login
+      this.redirectToLogin();
+    }
+  }
+
+  async callLogoutEndpoint() {
+    const response = await fetch('https://api.gameramp.com/auth/logout', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        deviceId: this.deviceId
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Logout failed: ${response.status}`);
+    }
+  }
+
+  clearLocalState() {
+    // Clear from memory
+    this.accessToken = null;
+    this.refreshToken = null;
+    this.deviceId = null;
+
+    // Clear from storage
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('deviceId');
+
+    // Clear any cached data
+    this.clearCache();
+  }
+
+  clearCache() {
+    // Clear any cached player data, configurations, etc.
+    localStorage.removeItem('playerConfig');
+    localStorage.removeItem('storeConfig');
+  }
+
+  redirectToLogin() {
+    // Redirect to login screen
+    window.location.href = '/login';
+    // Or emit event for app navigation
+    // eventEmitter.emit('navigate', '/login');
+  }
+}
+
+// Usage
+const authManager = new AuthManager();
+
+// Logout button handler
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await authManager.logout();
+});
+```
+</CodeGroup>
+
+## Security Considerations
+
+<Warning>
+- Always clear tokens from local storage after logout
+- Logout should be called when app is uninstalled (if possible)
+- Consider implementing device-level logout for security
+- Tokens should be invalidated server-side immediately
+</Warning>
+
+## Testing
+
+Test logout functionality:
+
+```bash
+# First, login to get access token
+curl -X POST 'http://api.gameramp.com/auth/login' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "apiKey": "test_tenant_4Dqms3ygG9FVC",
+    "deviceId": "device-123",
+    "timestamp": "2025-07-15T19:44:26Z",
+    "signature": "/Sn9msNKK4ifTEYrGC/GKpRptolLIyWi4jsfdn5S4g8="
+  }'
+
+# Use the access token to logout
+curl -X POST 'https://api.gameramp.com/auth/logout' \
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "deviceId": "device-123"
+  }'
+```
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card
+    title="Login"
+    icon="right-to-bracket"
+    href="/api-reference/endpoints/auth/login"
+  >
+    Authenticate and get tokens
+  </Card>
+  <Card
+    title="Refresh Token"
+    icon="arrows-rotate"
+    href="/api-reference/endpoints/auth/refresh"
+  >
+    Refresh expired tokens
+  </Card>
+</CardGroup>

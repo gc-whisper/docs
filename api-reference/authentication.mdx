@@ -1,0 +1,330 @@
+---
+title: 'Authentication'
+description: 'Secure API authentication using HMAC signatures and JWT tokens'
+icon: 'lock'
+---
+
+# Authentication
+
+GameRamp API uses a secure two-step authentication process:
+1. Generate HMAC-SHA256 signature using your API Secret
+2. Exchange signature for JWT tokens via login endpoint
+
+## Authentication Flow
+
+<Steps>
+  <Step title="Generate Signature">
+    Create HMAC-SHA256 signature with your API Secret
+  </Step>
+  <Step title="Login Request">
+    Send signature to `/auth/login` endpoint
+  </Step>
+  <Step title="Receive Tokens">
+    Get JWT access token and refresh token
+  </Step>
+  <Step title="Authenticate Requests">
+    Use Bearer token in Authorization header
+  </Step>
+</Steps>
+
+## Generating the Signature
+
+The signature authenticates your API requests using HMAC-SHA256.
+
+### Signature Components
+
+Create a pipe-delimited string with three values:
+```
+apiKey|deviceId|timestamp
+```
+
+Example:
+```
+test_tenant_4Dqms3ygG9FVC|device-123|2025-07-15T19:43:41Z
+```
+
+### Signature Generation Steps
+
+<Tabs>
+  <Tab title="Node.js">
+    ```javascript
+    const crypto = require('crypto');
+
+    function generateSignature(apiKey, deviceId, timestamp, apiSecret) {
+      // Create the payload
+      const payload = `${apiKey}|${deviceId}|${timestamp}`;
+
+      // Generate HMAC-SHA256
+      const hmac = crypto.createHmac('sha256', apiSecret);
+      hmac.update(payload);
+
+      // Return Base64 encoded signature
+      return hmac.digest('base64');
+    }
+
+    // Example usage
+    const apiKey = 'test_tenant_4Dqms3ygG9FVC';
+    const deviceId = 'device-123';
+    const timestamp = new Date().toISOString();
+    const apiSecret = 'your-api-secret';
+
+    const signature = generateSignature(apiKey, deviceId, timestamp, apiSecret);
+    ```
+  </Tab>
+
+  <Tab title="Python">
+    ```python
+    import hmac
+    import hashlib
+    import base64
+    from datetime import datetime
+
+    def generate_signature(api_key, device_id, timestamp, api_secret):
+        # Create the payload
+        payload = f"{api_key}|{device_id}|{timestamp}"
+
+        # Generate HMAC-SHA256
+        signature = hmac.new(
+            api_secret.encode('utf-8'),
+            payload.encode('utf-8'),
+            hashlib.sha256
+        )
+
+        # Return Base64 encoded signature
+        return base64.b64encode(signature.digest()).decode('utf-8')
+
+    # Example usage
+    api_key = 'test_tenant_4Dqms3ygG9FVC'
+    device_id = 'device-123'
+    timestamp = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+    api_secret = 'your-api-secret'
+
+    signature = generate_signature(api_key, device_id, timestamp, api_secret)
+    ```
+  </Tab>
+
+  <Tab title="C# / Unity">
+    ```csharp
+    using System;
+    using System.Security.Cryptography;
+    using System.Text;
+
+    public class SignatureGenerator
+    {
+        public static string GenerateSignature(
+            string apiKey,
+            string deviceId,
+            string timestamp,
+            string apiSecret)
+        {
+            // Create the payload
+            string payload = $"{apiKey}|{deviceId}|{timestamp}";
+
+            // Generate HMAC-SHA256
+            using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(apiSecret)))
+            {
+                byte[] hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+
+                // Return Base64 encoded signature
+                return Convert.ToBase64String(hash);
+            }
+        }
+
+        // Example usage
+        public static void Main()
+        {
+            string apiKey = "test_tenant_4Dqms3ygG9FVC";
+            string deviceId = "device-123";
+            string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'");
+            string apiSecret = "your-api-secret";
+
+            string signature = GenerateSignature(apiKey, deviceId, timestamp, apiSecret);
+        }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Login Request
+
+Once you have the signature, make a login request:
+
+```bash
+curl -X POST 'https://api.gameramp.com/auth/login' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "apiKey": "test_tenant_4Dqms3ygG9FVC",
+    "deviceId": "device-123",
+    "timestamp": "2025-07-15T19:44:26Z",
+    "signature": "/Sn9msNKK4ifTEYrGC/GKpRptolLIyWi4jsfdn5S4g8="
+  }'
+```
+
+### Request Body
+
+<ParamField body="apiKey" type="string" required>
+  Your API Key provided by GameRamp
+</ParamField>
+
+<ParamField body="deviceId" type="string" required>
+  Unique device identifier from client
+</ParamField>
+
+<ParamField body="timestamp" type="string" required>
+  Current UTC timestamp in ISO 8601 format (YYYY-MM-DDThh:mm:ssZ)
+</ParamField>
+
+<ParamField body="signature" type="string" required>
+  HMAC-SHA256 signature encoded in Base64
+</ParamField>
+
+### Response
+
+```json
+{
+  "accessToken": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "tokenType": "Bearer",
+  "expiresIn": 3600,
+  "playerConfig": {
+    "playerStatus": {
+      "isPayer": {
+        "value": true,
+        "defaultValue": false,
+        "expiredAt": null
+      }
+    },
+    "storeConfig": {
+      "activeSkus": [...]
+    }
+  }
+}
+```
+
+## Using the JWT Token
+
+After successful authentication, include the JWT token in all API requests:
+
+```bash
+curl -X GET 'https://api.gameramp.com/v1/player/status' \
+  -H 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...' \
+  -H 'X-Tenant-Id: your-tenant-id' \
+  -H 'X-Game-Id: your-game-id'
+```
+
+### Required Headers
+
+All authenticated endpoints require:
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token obtained from login
+  ```
+  Authorization: Bearer <accessToken>
+  ```
+</ParamField>
+
+<ParamField header="Content-Type" type="string">
+  Set to `application/json` for JSON payloads
+</ParamField>
+
+<ParamField header="X-Tenant-ID" type="string">
+  Your tenant identifier
+</ParamField>
+
+<ParamField header="X-Game-Id" type="string">
+  Your game identifier
+</ParamField>
+
+## Token Refresh
+
+Access tokens expire after the duration specified in `expiresIn`. Use the refresh token to obtain new tokens:
+
+```bash
+curl -X POST 'https://api.gameramp.com/auth/refresh' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "refreshToken": "your-refresh-token"
+  }'
+```
+
+See [Refresh Token](/api-reference/endpoints/auth/refresh) endpoint for details.
+
+## Security Requirements
+
+<Warning>
+Keep your API Secret secure and never expose it in client-side code or public repositories.
+</Warning>
+
+### Timestamp Validation
+- Timestamps must be within **5 minutes** of server time
+- Use UTC time in ISO 8601 format
+- Format: `YYYY-MM-DDThh:mm:ssZ`
+
+### Best Practices
+
+<Steps>
+  <Step title="Secure Storage">
+    Store API Secret in secure environment variables or key management systems
+  </Step>
+  <Step title="Server-Side Only">
+    Generate signatures on your backend server, never in client applications
+  </Step>
+  <Step title="Token Management">
+    Implement automatic token refresh before expiration
+  </Step>
+  <Step title="Error Handling">
+    Handle 401 errors by refreshing tokens or re-authenticating
+  </Step>
+</Steps>
+
+## Error Responses
+
+### 401 Unauthorized
+Invalid signature or expired token
+```json
+{
+  "error": "Invalid authentication credentials"
+}
+```
+
+### 400 Bad Request
+Timestamp outside acceptable window (±5 minutes)
+```json
+{
+  "error": "Request timestamp is outside the acceptable time window"
+}
+```
+
+## Testing
+
+Use these development credentials for testing:
+
+<Note>
+Test credentials only work in development environment.
+</Note>
+
+```json
+{
+  "apiKey": "test_tenant_4Dqms3ygG9FVC",
+  "apiSecret": "b815ebac-9744-43db-b5e6-89f90620297e-Wjl8qlWrJn2r4OEB7UXJ_L8iYOLTR8p10t83Wi_79Q"
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Login Endpoint"
+    icon="right-to-bracket"
+    href="/api-reference/endpoints/auth/login"
+  >
+    Detailed login endpoint documentation
+  </Card>
+  <Card
+    title="Events API"
+    icon="chart-line"
+    href="/api-reference/endpoints/events"
+  >
+    Start tracking player events
+  </Card>
+</CardGroup>
