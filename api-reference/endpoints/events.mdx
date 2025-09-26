@@ -1,597 +1,92 @@
 ---
-title: 'POST /v1/events'
-description: 'Track player events and behaviors'
+title: 'Events'
+description: 'POST /v1/events'
 ---
 
-# Events API
+# Events
 
-Track player-related events and behaviors to GameRamp. Events are sent in batches for efficient data transfer. This API supports various event types including session events, ad impressions, purchases, and custom events.
+Endpoint: **POST /v1/events**
 
-<Card title="Endpoint" icon="server">
-  ```
-  POST https://api.gameramp.com/v1/events
-  ```
-</Card>
+Event ingestion API - Track events to Gameramp from client devices using Api calls / S2S
 
-## Request
+- Used to track player related events captured by API
+- The body schema will be mostly same but what is to be tracked is TBD
 
-### Headers
+## Headers
 
-<ParamField header="Authorization" type="string" required>
-  Bearer token obtained from login
-  ```
-  Authorization: Bearer <JWT_TOKEN>
-  ```
-</ParamField>
+- **Authorization:** Bearer `<JWT_TOKEN>`
+- **Content-Type:** application/json
+- **X-Tenant-ID:** `<Tenant_ID>`
 
-<ParamField header="Content-Type" type="string" required>
-  Must be `application/json`
-</ParamField>
+## Body
 
-<ParamField header="X-Tenant-ID" type="string" required>
-  Your tenant/studio identifier
-</ParamField>
+Events are batched, body contains array of events
 
-### Body Structure
+There are some common properties with every event as well as event related properties also:
 
-The request body contains an array of events. Each event includes common properties and event-specific properties.
+- **Event Type** - `eventType` - mandatory (string type, like click, impression, purchase etc(TBD))
+- **Event Timestamp** - `eventTimestamp` - Mandatory
+- **Session Id** - `sessionId` - Mandatory
+- **Player Id** - `playerId`
+- **Platform** - `platform`
+- **SDK version** - `sdkVersion`
+- **App version** - `appVersion`
+- **Event Properties** - `properties`
+  - Custom event properties
+  - This is an object may varies with event types
 
 ```json
 [
   {
-    "eventType": "string",
-    "timestamp": "ISO 8601 timestamp",
+    "eventType": "session_start",
+    "timestamp": "2025-07-23T10:13:56.000Z", // yyyy-MM-dd'T'HH:mm:ss.SSSXXX
     "payload": {
-      // Event-specific data
+      // Any payload key/value pair
     },
     "metadata": {
-      // Additional context
+      // Any metadata key/value pair
     }
-  }
+  },
+  // .....
 ]
 ```
 
-### Event Properties
-
-<ParamField body="eventType" type="string" required>
-  Type of event being tracked. Common types:
-  - `session_start` - Session began
-  - `session_end` - Session ended
-  - `Ad_Impression` - Ad was shown
-  - `purchase` - In-app purchase
-  - `click` - User interaction
-  - Custom event types as needed
-</ParamField>
-
-<ParamField body="timestamp" type="string" required>
-  Event timestamp in ISO 8601 format with milliseconds
-  ```
-  2025-07-23T10:13:56.000Z
-  ```
-</ParamField>
-
-<ParamField body="payload" type="object">
-  Event-specific data. Common fields:
-  - `userId` - User identifier
-  - `sessionId` - Current session ID
-  - `playerId` - Player identifier
-  - Event-specific fields (see examples below)
-</ParamField>
-
-<ParamField body="metadata" type="object">
-  Additional context about the event:
-  - `deviceType` - Device model
-  - `osName` - Operating system
-  - `osVersion` - OS version
-  - `platform` - Game platform
-  - `sdkVersion` - SDK version
-  - `appVersion` - App version
-</ParamField>
-
-## Event Types
-
-### Session Events
-
-<CodeGroup>
-```json session_start
-{
-  "eventType": "session_start",
-  "timestamp": "2025-07-23T10:13:56.000Z",
-  "payload": {
-    "userId": "66317bbb_23057fc5",
-    "sessionId": "4824583f-067b-4a33-b5f4-4c540487b79a",
-    "source": "organic",
-    "campaign": "direct"
-  },
-  "metadata": {
-    "deviceType": "iPhone 14",
-    "osName": "iOS",
-    "osVersion": "16.5",
-    "appVersion": "1.2.3"
-  }
-}
-```
-
-```json session_end
-{
-  "eventType": "session_end",
-  "timestamp": "2025-07-23T10:45:12.000Z",
-  "payload": {
-    "userId": "66317bbb_23057fc5",
-    "sessionId": "4824583f-067b-4a33-b5f4-4c540487b79a",
-    "duration": 1876000  // milliseconds
-  },
-  "metadata": {
-    "deviceType": "iPhone 14",
-    "osName": "iOS",
-    "osVersion": "16.5"
-  }
-}
-```
-</CodeGroup>
-
-### Ad Events
-
-<CodeGroup>
-```json Ad_Impression
-{
-  "eventType": "Ad_Impression",
-  "timestamp": "2025-07-23T10:13:56.000Z",
-  "payload": {
-    "userId": "66317bbb_23057fc5",
-    "sessionId": "4824583f-067b-4a33-b5f4-4c540487b79a",
-    "adId": "banner_main_menu",
-    "campaignId": "summer_2025_campaign",
-    "adType": "banner",  // banner, interstitial, rewarded
-    "placement": "main_menu"
-  },
-  "metadata": {
-    "deviceType": "Pixel 8",
-    "osName": "Android",
-    "osVersion": "14"
-  }
-}
-```
-
-```json Ad_Click
-{
-  "eventType": "Ad_Click",
-  "timestamp": "2025-07-23T10:14:02.000Z",
-  "payload": {
-    "userId": "66317bbb_23057fc5",
-    "sessionId": "4824583f-067b-4a33-b5f4-4c540487b79a",
-    "adId": "banner_main_menu",
-    "campaignId": "summer_2025_campaign"
-  },
-  "metadata": {
-    "deviceType": "Pixel 8",
-    "osName": "Android",
-    "osVersion": "14"
-  }
-}
-```
-</CodeGroup>
-
-### Purchase Events
-
-```json
-{
-  "eventType": "purchase",
-  "timestamp": "2025-07-23T10:20:34.000Z",
-  "payload": {
-    "userId": "66317bbb_23057fc5",
-    "sessionId": "4824583f-067b-4a33-b5f4-4c540487b79a",
-    "productId": "starter_pack",
-    "price": 0.99,
-    "currency": "USD",
-    "transactionId": "GPA.1234-5678-9012-34567",
-    "receipt": "base64_encoded_receipt"
-  },
-  "metadata": {
-    "deviceType": "iPhone 14",
-    "osName": "iOS",
-    "osVersion": "16.5",
-    "store": "app_store"
-  }
-}
-```
-
-## Example Request
-
-<CodeGroup>
-```bash cURL
-curl -X POST 'https://api.gameramp.com/v1/events' \
-  -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer YOUR_JWT_TOKEN' \
-  -H 'X-Tenant-ID: test_tenant_1752523421' \
-  -d '[
-    {
-      "eventType": "session_start",
-      "timestamp": "2025-07-23T10:13:56.000Z",
-      "payload": {
-        "userId": "66317bbb_23057fc5",
-        "sessionId": "4824583f-067b-4a33-b5f4-4c540487b79a"
-      },
-      "metadata": {
-        "deviceType": "Pixel 8",
-        "osName": "Android",
-        "osVersion": "14"
-      }
-    },
-    {
-      "eventType": "Ad_Impression",
-      "timestamp": "2025-07-23T10:13:58.000Z",
-      "payload": {
-        "userId": "66317bbb_23057fc5",
-        "sessionId": "4824583f-067b-4a33-b5f4-4c540487b79a",
-        "adId": "demo_ad_001",
-        "campaignId": "demo_campaign_001"
-      },
-      "metadata": {
-        "deviceType": "Pixel 8",
-        "osName": "Android",
-        "osVersion": "14"
-      }
-    }
-  ]'
-```
-
-```javascript Node.js
-class EventTracker {
-  constructor(apiToken, tenantId) {
-    this.apiToken = apiToken;
-    this.tenantId = tenantId;
-    this.eventQueue = [];
-    this.sessionId = this.generateSessionId();
-  }
-
-  generateSessionId() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-      const r = Math.random() * 16 | 0;
-      const v = c == 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
-  }
-
-  trackEvent(eventType, payload = {}, metadata = {}) {
-    const event = {
-      eventType,
-      timestamp: new Date().toISOString(),
-      payload: {
-        ...payload,
-        sessionId: this.sessionId,
-        userId: this.userId
-      },
-      metadata: {
-        ...this.getDeviceInfo(),
-        ...metadata
-      }
-    };
-
-    this.eventQueue.push(event);
-
-    // Batch send every 10 events or 5 seconds
-    if (this.eventQueue.length >= 10) {
-      this.flush();
-    }
-  }
-
-  getDeviceInfo() {
-    return {
-      deviceType: navigator.userAgent,
-      osName: this.getOSName(),
-      osVersion: this.getOSVersion(),
-      appVersion: '1.0.0'
-    };
-  }
-
-  async flush() {
-    if (this.eventQueue.length === 0) return;
-
-    const events = [...this.eventQueue];
-    this.eventQueue = [];
-
-    try {
-      const response = await fetch('https://api.gameramp.com/v1/events', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiToken}`,
-          'Content-Type': 'application/json',
-          'X-Tenant-ID': this.tenantId
-        },
-        body: JSON.stringify(events)
-      });
-
-      if (!response.ok) {
-        console.error('Failed to send events:', response.status);
-        // Re-queue events on failure
-        this.eventQueue.unshift(...events);
-      }
-    } catch (error) {
-      console.error('Error sending events:', error);
-      // Re-queue events on error
-      this.eventQueue.unshift(...events);
-    }
-  }
-
-  // Track specific events
-  trackSessionStart(source = 'organic', campaign = 'direct') {
-    this.trackEvent('session_start', { source, campaign });
-  }
-
-  trackAdImpression(adId, campaignId, adType = 'banner') {
-    this.trackEvent('Ad_Impression', {
-      adId,
-      campaignId,
-      adType
-    });
-  }
-
-  trackPurchase(productId, price, currency = 'USD') {
-    this.trackEvent('purchase', {
-      productId,
-      price,
-      currency,
-      transactionId: Date.now().toString()
-    });
-  }
-}
-
-// Usage
-const tracker = new EventTracker('your-jwt-token', 'your-tenant-id');
-
-// Track session start
-tracker.trackSessionStart();
-
-// Track ad impression
-tracker.trackAdImpression('banner_001', 'campaign_001');
-
-// Track purchase
-tracker.trackPurchase('starter_pack', 0.99, 'USD');
-
-// Flush remaining events
-tracker.flush();
-```
-
-```python Python
-import requests
-import json
-from datetime import datetime
-import uuid
-from typing import Dict, List, Any
-
-class EventTracker:
-    def __init__(self, api_token: str, tenant_id: str):
-        self.api_token = api_token
-        self.tenant_id = tenant_id
-        self.event_queue: List[Dict] = []
-        self.session_id = str(uuid.uuid4())
-        self.base_url = 'https://api.gameramp.com/v1/events'
-
-    def track_event(self,
-                   event_type: str,
-                   payload: Dict[str, Any] = None,
-                   metadata: Dict[str, Any] = None):
-        """Track a single event"""
-        event = {
-            'eventType': event_type,
-            'timestamp': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.000Z'),
-            'payload': {
-                **(payload or {}),
-                'sessionId': self.session_id
-            },
-            'metadata': metadata or {}
-        }
-
-        self.event_queue.append(event)
-
-        # Auto-flush at 10 events
-        if len(self.event_queue) >= 10:
-            self.flush()
-
-    def flush(self) -> bool:
-        """Send all queued events"""
-        if not self.event_queue:
-            return True
-
-        events = self.event_queue.copy()
-        self.event_queue.clear()
-
-        try:
-            response = requests.post(
-                self.base_url,
-                headers={
-                    'Authorization': f'Bearer {self.api_token}',
-                    'Content-Type': 'application/json',
-                    'X-Tenant-ID': self.tenant_id
-                },
-                json=events
-            )
-
-            if response.status_code != 200:
-                print(f'Failed to send events: {response.status_code}')
-                # Re-queue events on failure
-                self.event_queue = events + self.event_queue
-                return False
-
-            return True
-
-        except Exception as e:
-            print(f'Error sending events: {e}')
-            # Re-queue events on error
-            self.event_queue = events + self.event_queue
-            return False
-
-    def track_session_start(self):
-        """Track session start event"""
-        self.track_event('session_start')
-
-    def track_ad_impression(self, ad_id: str, campaign_id: str):
-        """Track ad impression"""
-        self.track_event('Ad_Impression', {
-            'adId': ad_id,
-            'campaignId': campaign_id
-        })
-
-    def track_purchase(self, product_id: str, price: float, currency: str = 'USD'):
-        """Track purchase event"""
-        self.track_event('purchase', {
-            'productId': product_id,
-            'price': price,
-            'currency': currency
-        })
-
-# Usage example
-tracker = EventTracker('your-jwt-token', 'your-tenant-id')
-
-# Track various events
-tracker.track_session_start()
-tracker.track_ad_impression('banner_001', 'summer_campaign')
-tracker.track_purchase('starter_pack', 0.99)
-
-# Ensure all events are sent
-tracker.flush()
-```
-</CodeGroup>
-
-## Response
-
-### Success Response (200 OK)
-
-```json
-{
-  "message": "Events processed successfully",
-  "processed": 2,
-  "status": "success"
-}
-```
-
-### Response Fields
-
-<ResponseField name="message" type="string">
-  Confirmation message
-</ResponseField>
-
-<ResponseField name="processed" type="number">
-  Number of events successfully processed
-</ResponseField>
-
-<ResponseField name="status" type="string">
-  Operation status
-</ResponseField>
-
-## Error Responses
-
-### 401 Unauthorized
-
-Invalid or expired JWT token
-
-```json
-{
-  "error": "Invalid authentication token",
-  "status": "error"
-}
-```
-
-### 400 Bad Request
-
-Invalid event format or missing required fields
-
-```json
-{
-  "error": "Invalid event format: missing required field 'eventType'",
-  "status": "error"
-}
-```
-
-### 413 Payload Too Large
-
-Batch size exceeds limits
-
-```json
-{
-  "error": "Batch size exceeds maximum of 100 events",
-  "status": "error"
-}
-```
-
-## Best Practices
-
-<Steps>
-  <Step title="Batch Events">
-    Send events in batches of 10-50 for optimal performance
-  </Step>
-  <Step title="Implement Retry Logic">
-    Retry failed requests with exponential backoff
-  </Step>
-  <Step title="Queue Events Offline">
-    Store events locally when offline and send when connection restored
-  </Step>
-  <Step title="Include Context">
-    Always include sessionId and userId for proper tracking
-  </Step>
-  <Step title="Use Consistent Timestamps">
-    Use UTC timestamps in ISO 8601 format
-  </Step>
-</Steps>
-
-## Event Batching Strategy
-
-<Warning>
-- Maximum batch size: 100 events
-- Maximum payload size: 1MB
-- Events older than 24 hours may be rejected
-</Warning>
-
-## Testing
-
-Test event tracking with development credentials:
+## Example
 
 ```bash
-# Get JWT token first
-TOKEN=$(curl -X POST 'http://api.gameramp.com/auth/login' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "apiKey": "test_tenant_4Dqms3ygG9FVC",
-    "deviceId": "device-123",
-    "timestamp": "2025-07-15T19:44:26Z",
-    "signature": "/Sn9msNKK4ifTEYrGC/GKpRptolLIyWi4jsfdn5S4g8="
-  }' | jq -r '.accessToken')
-
-# Send test events
-curl -X POST 'https://api.gameramp.com/v1/events' \
-  -H "Authorization: Bearer $TOKEN" \
-  -H 'Content-Type: application/json' \
-  -H 'X-Tenant-ID: test_tenant_1752523421' \
-  -d '[
-    {
-      "eventType": "test_event",
-      "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'",
-      "payload": {
-        "test": true
-      },
-      "metadata": {
-        "environment": "development"
-      }
+curl --location 'https://api.gameramp.com/v1/events' \
+--header 'Content-Type: application/json' \
+--header 'X-Tenant-ID: test_tenant_1752523421' \
+--data '[
+  {
+    "eventType": "Ad_Impression",
+    "timestamp": "2025-07-23T10:13:56.000Z",
+    "payload": {
+      "userId": "66317bbb_23057fc5",
+      "sessionId": "4824583f-067b-4a33-b5f4-4c540487b79a",
+      "adId": "demo_ad_001",
+      "campaignId": "demo_campaign_001"
+    },
+    "metadata": {
+      "deviceType": "Pixel 8",
+      "osName": "Android",
+      "osVersion": "14"
     }
-  ]'
+  },
+  {
+    "eventType": "Ad_Impression",
+    "timestamp": "2025-07-23T10:13:56.000Z",
+    "payload": {
+      "userId": "66317bbb_23057fc5",
+      "sessionId": "4824583f-067b-4a33-b5f4-4c540487b79a",
+      "adId": "demo_ad_001",
+      "campaignId": "demo_campaign_001"
+    },
+    "metadata": {
+      "deviceType": "Pixel 8",
+      "osName": "Android",
+      "osVersion": "14"
+    }
+  }
+]'
 ```
-
-## Related Documentation
-
-<CardGroup cols={2}>
-  <Card
-    title="Authentication"
-    icon="lock"
-    href="/api-reference/authentication"
-  >
-    Learn about JWT authentication
-  </Card>
-  <Card
-    title="Unity SDK Analytics"
-    icon="unity"
-    href="/sdks/unity/analytics"
-  >
-    Unity SDK event tracking
-  </Card>
-</CardGroup>

@@ -1,122 +1,142 @@
 ---
-title: 'POST /auth/login'
-description: 'Authenticate and obtain JWT tokens'
+title: 'Login'
+description: 'POST /auth/login'
 ---
 
 # Login
 
-Authenticate with GameRamp API using your API credentials and receive JWT tokens for subsequent requests. The login response also includes initial player configurations.
+- Obtain API Key and Secret (provided by us)
+- Save API secret and key securely in client
+- Client generates a signed request using the Secret
+- Authentication service validates the signature and issues a JWT token
+- Client uses the JWT token for subsequent API calls
+- Response now include all player configs
 
-<Card title="Endpoint" icon="server">
-  ```
-  POST https://api.gameramp.com/auth/login
-  ```
-</Card>
+## Auth End Point
 
-## Request
-
-### Headers
-
-<ParamField header="Content-Type" type="string" required>
-  Must be `application/json`
-</ParamField>
-
-### Body Parameters
-
-<ParamField body="apiKey" type="string" required>
-  Your API Key provided by GameRamp
-</ParamField>
-
-<ParamField body="deviceId" type="string" required>
-  Unique device identifier (e.g., device UDID, installation ID, or generated UUID)
-</ParamField>
-
-<ParamField body="timestamp" type="string" required>
-  Current UTC timestamp in ISO 8601 format: `YYYY-MM-DDThh:mm:ssZ`
-</ParamField>
-
-<ParamField body="signature" type="string" required>
-  HMAC-SHA256 signature encoded in Base64. See [Authentication](/api-reference/authentication) for generation details.
-</ParamField>
-
-### Example Request
-
-<CodeGroup>
-```bash cURL
-curl -X POST 'https://api.gameramp.com/auth/login' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "apiKey": "test_tenant_4Dqms3ygG9FVC",
-    "deviceId": "device-123",
-    "timestamp": "2025-07-15T19:44:26Z",
-    "signature": "/Sn9msNKK4ifTEYrGC/GKpRptolLIyWi4jsfdn5S4g8="
-  }'
+```
+POST https://api.gameramp.com/auth/login
 ```
 
-```javascript Node.js
-const crypto = require('crypto');
-const axios = require('axios');
+## Request Body
 
-async function login(apiKey, deviceId, apiSecret) {
-  const timestamp = new Date().toISOString().replace(/\.\d{3}/, '');
-  const payload = `${apiKey}|${deviceId}|${timestamp}`;
-
-  const signature = crypto
-    .createHmac('sha256', apiSecret)
-    .update(payload)
-    .digest('base64');
-
-  const response = await axios.post('https://api.gameramp.com/auth/login', {
-    apiKey,
-    deviceId,
-    timestamp,
-    signature
-  });
-
-  return response.data;
+```json
+{
+  "apiKey": "<api_key>", // API Key
+  "deviceId": "<unique_device_identifier>", // Unique device id(from client)
+  "timestamp": "2025-07-15T19:43:41Z", // Current UTC timestamp in ISO 8601 format (YYYY-MM-DDThh:mm:ssZ)
+  "signature": "<signature>" // HMAC-SHA256 signature encoded in Base64
 }
 ```
 
-```python Python
-import hmac
-import hashlib
-import base64
-import requests
-from datetime import datetime
+## Generating signature
 
-def login(api_key, device_id, api_secret):
-    timestamp = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
-    payload = f"{api_key}|{device_id}|{timestamp}"
+The signature is generated using HMAC-SHA256 with API Secret. The payload to sign is a pipe-delimited string of three values:
 
-    signature = base64.b64encode(
-        hmac.new(
-            api_secret.encode('utf-8'),
-            payload.encode('utf-8'),
-            hashlib.sha256
-        ).digest()
-    ).decode('utf-8')
-
-    response = requests.post(
-        'https://api.gameramp.com/auth/login',
-        json={
-            'apiKey': api_key,
-            'deviceId': device_id,
-            'timestamp': timestamp,
-            'signature': signature
-        }
-    )
-
-    return response.json()
 ```
-</CodeGroup>
+apiKey|deviceId|timestamp
+```
+
+e.g - `test_tenant_4Dqms3ygG9FVC|device-123|2025-07-15T19:43:41Z`
+
+The resulting HMAC-SHA256 digest must be Base64-encoded to create the signature.
+
+## Security Requirements
+
+- API Secret and key should be saved securely in client
+- Timestamps must be within 5 minutes of the server time
 
 ## Response
 
-### Success Response (200 OK)
+### Success
 
 ```json
 {
   "accessToken": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "tokenType": "Bearer",
+  "expiresIn": 3600,
+  "playerConfig": {
+    "playerStatus": {
+      "isPayer": {
+        "value": true,
+        "defaultValue": false,
+        "expiredAt": null
+      }
+    },
+    "storeConfig": {
+      "activeSkus": [
+        {
+          "skuId": "starter_pack",
+          "name": "Starter Pack",
+          "description": "Perfect for new players",
+          "actualPrice": 0.99,
+          "offerPrice": 0.99,
+          "currency": "USD",
+          "assets": [],
+          "active": true
+        },
+        {
+          "skuId": "remove_ads",
+          "name": "Remove Ads",
+          "description": "Removes all advertisements",
+          "actualPrice": 2.99,
+          "offerPrice": 2.99,
+          "currency": "USD",
+          "assets": [],
+          "active": true
+        },
+        {
+          "skuId": "premium_currency_small",
+          "name": "Premium Currency (Small)",
+          "description": "100 premium coins",
+          "actualPrice": 4.99,
+          "offerPrice": 4.99,
+          "currency": "USD",
+          "assets": [],
+          "active": true
+        }
+      ],
+      "lastUpdatedTimestamp": 0,
+      "userSpecificPromoId": null,
+      "fallbackConfig": null
+    }
+  }
+}
+```
+
+### Error
+
+- **401 Unauthorized**
+- **400 Bad request** (Request timestamp is outside the acceptable time window.)
+
+## Using auth token
+
+After successful authentication, use the provided JWT access token in subsequent API requests by including it in the Authorization header:
+
+```
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+The access token will expire after the duration specified in expiresIn (in seconds). Use the refresh token to obtain a new access token when needed.
+
+## Dev Keys
+
+- **API Key** - `test_tenant_4Dqms3ygG9FVC`
+- **API Secret** - `b815ebac-9744-43db-b5e6-89f90620297e-Wjl8qlWrJn2r4OEB7UXJ_L8iYOLTR8p10t83Wi_79Q`
+
+### Example
+
+```bash
+curl -X POST 'http://api.gameramp.com/auth/login' \
+  -H 'Content-Type: application/json' \
+  -d '{"apiKey": "test_tenant_4Dqms3ygG9FVC", "deviceId": "device-123", "timestamp": "2025-07-15T19:44:26Z", "signature": "/Sn9msNKK4ifTEYrGC/GKpRptolLIyWi4jsfdn5S4g8="}'
+```
+
+Response:
+```json
+{
+  "accessToken": "eyJraWQiOiI1Zjk5ZmRjMy1hMTdlLTg3ZGYtOWI4YS1jM2VmN2Y3M2FiMmQiLCJhbGciOiJSUzI1NiJ9.eyJ0ZW5hbnRfaWQiOiJ0ZXN0X3RlbmFudF8xNzUyNTIzNDIxIiwiZGV2aWNlX2lkIjoidGVzdC1kZXZpY2UtNDU2IiwiZ2FtZV9pZCI6ImRlZmF1bHRfZ2FtZSIsInN1YiI6InRlc3QtZGV2aWNlLTQ1Nl8yMGY2Y2FiMiIsImlhdCI6MTc1NDQ4NTYyNSwiZXhwIjoxNzU0NDg2NTI1fQ.LcKpK5AGpJoxbZn2iPOBDx-IGcOTL6odTPUjXo_YW1rHZJYR2Mf42MjMDJO98Paq0d6AFHAIpTSjtzOp6Ih8qrMsfngmB0a_W3sNVEL4XBTw0rLDK7YSFOqD6MKlGQq9VPPO0kOWSYLgTuTAkzSVTuVMiqWjBsxuQOb-KknhVrDgMy6bVaHeK8fcqQP36iHW6Xy47dleEf60z7cLmBT4MRjb7cy3RUcDuOvN5c9LfVmSCjBALLG7MSJZbvAUv3JO5mit6soCQOnxl_klkoRO75aor5w9MAAhjRFD1sdJRRMC-feDxXzFOgeP_CMjPNvBfGl02MdVuLAsu8wqiBmCZA",
   "refreshToken": "2b78c91e-5e14-4d75-a558-a45880d03233",
   "tokenType": "Bearer",
   "expiresIn": 900000,
@@ -171,171 +191,3 @@ def login(api_key, device_id, api_secret):
     }
   }
 }
-```
-
-### Response Fields
-
-<ResponseField name="accessToken" type="string">
-  JWT access token for authenticating API requests
-</ResponseField>
-
-<ResponseField name="refreshToken" type="string">
-  Token for refreshing the access token when it expires
-</ResponseField>
-
-<ResponseField name="tokenType" type="string">
-  Always "Bearer"
-</ResponseField>
-
-<ResponseField name="expiresIn" type="number">
-  Access token validity period in seconds
-</ResponseField>
-
-<ResponseField name="userId" type="string">
-  Unique user identifier
-</ResponseField>
-
-<ResponseField name="deviceId" type="string">
-  The device ID used in the request
-</ResponseField>
-
-<ResponseField name="gameId" type="string">
-  Game identifier
-</ResponseField>
-
-<ResponseField name="tenantId" type="string">
-  Tenant/Studio identifier
-</ResponseField>
-
-<ResponseField name="playerConfig" type="object">
-  Initial player configuration including status and store settings
-
-  <Expandable title="playerConfig properties">
-    <ResponseField name="playerStatus" type="object">
-      Player prediction status
-
-      <ResponseField name="isPayer" type="object">
-        Payer prediction
-
-        <ResponseField name="value" type="boolean">
-          Current prediction value
-        </ResponseField>
-
-        <ResponseField name="defaultValue" type="boolean">
-          Default value if no prediction available
-        </ResponseField>
-
-        <ResponseField name="expiredAt" type="string | null">
-          Expiration timestamp for the prediction
-        </ResponseField>
-      </ResponseField>
-    </ResponseField>
-
-    <ResponseField name="storeConfig" type="object">
-      Store configuration
-
-      <ResponseField name="activeSkus" type="array">
-        Array of available products
-      </ResponseField>
-
-      <ResponseField name="lastUpdatedTimestamp" type="number">
-        Last update timestamp
-      </ResponseField>
-
-      <ResponseField name="userSpecificPromoId" type="string | null">
-        User-specific promotion ID
-      </ResponseField>
-    </ResponseField>
-  </Expandable>
-</ResponseField>
-
-## Error Responses
-
-### 401 Unauthorized
-
-Invalid credentials or signature
-
-```json
-{
-  "error": "Invalid authentication credentials",
-  "status": "error"
-}
-```
-
-### 400 Bad Request
-
-Request timestamp outside acceptable window (±5 minutes)
-
-```json
-{
-  "error": "Request timestamp is outside the acceptable time window",
-  "status": "error"
-}
-```
-
-## Security Notes
-
-<Warning>
-- API Secret must be kept secure and never exposed in client-side code
-- Timestamps must be within 5 minutes of server time
-- Each device should use a unique, persistent device ID
-</Warning>
-
-## Testing
-
-Use these test credentials for development:
-
-```json
-{
-  "apiKey": "test_tenant_4Dqms3ygG9FVC",
-  "apiSecret": "b815ebac-9744-43db-b5e6-89f90620297e-Wjl8qlWrJn2r4OEB7UXJ_L8iYOLTR8p10t83Wi_79Q"
-}
-```
-
-### Test Request
-
-```bash
-curl -X POST 'http://api.gameramp.com/auth/login' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "apiKey": "test_tenant_4Dqms3ygG9FVC",
-    "deviceId": "device-123",
-    "timestamp": "2025-07-15T19:44:26Z",
-    "signature": "/Sn9msNKK4ifTEYrGC/GKpRptolLIyWi4jsfdn5S4g8="
-  }'
-```
-
-## Next Steps
-
-After successful login:
-
-<CardGroup cols={2}>
-  <Card
-    title="Use Access Token"
-    icon="key"
-    href="/api-reference/authentication#using-the-jwt-token"
-  >
-    Learn how to use the JWT token
-  </Card>
-  <Card
-    title="Track Events"
-    icon="chart-line"
-    href="/api-reference/endpoints/events"
-  >
-    Start sending player events
-  </Card>
-  <Card
-    title="Refresh Token"
-    icon="arrows-rotate"
-    href="/api-reference/endpoints/auth/refresh"
-  >
-    Refresh expired tokens
-  </Card>
-  <Card
-    title="Get Player Status"
-    icon="user"
-    href="/api-reference/endpoints/player/status"
-  >
-    Retrieve player predictions
-  </Card>
-</CardGroup>
