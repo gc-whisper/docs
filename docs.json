@@ -83,6 +83,23 @@
             ]
           }
         ]
+      },
+      {
+        "tab": "Integrations",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "integrations/introduction"
+            ]
+          },
+          {
+            "group": "Data Export",
+            "pages": [
+              "integrations/bigquery"
+            ]
+          }
+        ]
       }
     ],
     "global": {

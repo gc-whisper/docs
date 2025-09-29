@@ -1,0 +1,94 @@
+---
+title: "BigQuery Integration"
+description: "Learn how to integrate GameRamp with Google BigQuery for advanced analytics and data warehousing"
+---
+
+## Service Account Configuration
+
+To enable BigQuery integration, you need to configure the GameRamp service account with the required roles.
+
+### Required Service Account: `bq-ingestion@gc-prod-459709.iam.gserviceaccount.com`
+
+### Required IAM Roles
+
+Please add the following roles to the service account to enable proper BigQuery integration:
+
+<Steps>
+  <Step title="BigQuery Job User">
+    Allows the service account to run BigQuery jobs for data ingestion and querying.
+    
+    **Role:** `roles/bigquery.jobUser`
+  </Step>
+  
+  <Step title="Data Viewer">
+    Provides read access to datasets and tables within your BigQuery project.
+    
+    **Role:** `roles/bigquery.dataViewer`
+  </Step>
+  
+  <Step title="BigQuery User">
+    Grants permissions to run queries and access BigQuery resources.
+    
+    **Role:** `roles/bigquery.user`
+  </Step>
+</Steps>
+
+## Setting Up Permissions
+
+### Using Google Cloud Console
+
+1. Navigate to the [IAM & Admin page](https://console.cloud.google.com/iam-admin/iam) in Google Cloud Console
+2. Find the service account: `bq-ingestion@gc-prod-459709.iam.gserviceaccount.com`
+3. Click the edit icon (pencil) next to the service account
+4. Add the following roles:
+   - BigQuery Job User
+   - Data Viewer  
+   - BigQuery User
+5. Save the changes
+
+### Using gcloud CLI
+
+```bash
+# Add BigQuery Job User role
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:bq-ingestion@gc-prod-459709.iam.gserviceaccount.com" \
+  --role="roles/bigquery.jobUser"
+
+# Add Data Viewer role
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:bq-ingestion@gc-prod-459709.iam.gserviceaccount.com" \
+  --role="roles/bigquery.dataViewer"
+
+# Add BigQuery User role
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:bq-ingestion@gc-prod-459709.iam.gserviceaccount.com" \
+  --role="roles/bigquery.user"
+```
+
+## Data Flow
+
+Once configured, GameRamp will automatically:
+
+1. **Event Ingestion**: Stream player events and analytics data to your BigQuery datasets
+2. **Data Processing**: Process and transform raw event data for analysis with intelligent predictions
+
+## Available Data
+
+The BigQuery integration provides access to:
+
+- **Player Events**: All tracked player interactions and behaviors
+- **Session Data**: Game session information and duration metrics  
+- **Revenue Metrics**: Purchase events and monetization data
+- **Prediction Results**: AI-generated player predictions and scores
+
+## Next Steps
+
+After configuring the service account permissions:
+
+1. Contact GameRamp support to enable BigQuery integration for your account
+2. Specify your BigQuery project ID and preferred dataset names
+3. GameRamp will begin streaming your data to the configured datasets
+
+## Support
+
+For assistance with BigQuery integration setup, contact GameRamp support at [connect@gameramp.com](mailto:connect@gameramp.com).
