@@ -185,7 +185,11 @@ curl -X POST 'https://api.gameramp.com/auth/login' \
   "accessToken": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
   "refreshToken": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
   "tokenType": "Bearer",
-  "expiresIn": 3600,
+  "expiresIn": 900000,
+  "userId": "device-123_unique_id",
+  "deviceId": "device-123",
+  "gameId": "default_game",
+  "tenantId": "test_tenant_1752523421",
   "playerConfig": {
     "playerStatus": {
       "isPayer": {
@@ -208,7 +212,7 @@ After successful authentication, include the JWT token in all API requests:
 ```bash
 curl -X GET 'https://api.gameramp.com/v1/player/status' \
   -H 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...' \
-  -H 'X-Tenant-Id: your-tenant-id' \
+  -H 'X-Tenant-ID: your-tenant-id' \
   -H 'X-Game-Id: your-game-id'
 ```
 
@@ -227,7 +231,7 @@ All authenticated endpoints require:
   Set to `application/json` for JSON payloads
 </ParamField>
 
-<ParamField header="X-Tenant-Id" type="string">
+<ParamField header="X-Tenant-ID" type="string">
   Your tenant identifier
 </ParamField>
 

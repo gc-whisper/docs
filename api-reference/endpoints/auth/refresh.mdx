@@ -24,7 +24,7 @@ Refreshes an expired access token using a valid refresh token. Use this endpoint
   "accessToken": "string",  // JWT access token
   "refreshToken": "string", // Refresh token for future token renewal
   "tokenType": "Bearer",   // Type of token (always "Bearer")
-  "expiresIn": 3600,       // Access token validity period in seconds
+  "expiresIn": 900000,     // Access token validity period in seconds
   "userId": "string",      // User identifier
   "deviceId": "string",    // Device identifier
   "gameId": "string",      // Game identifier
@@ -49,7 +49,7 @@ Response:
   "accessToken":"eyJraWQiOiJhZTMwOWE2Yy1mMGVlLTRlYmYtYjIzNi1hMGQ3ZDk0ODg1ZTQiLCJhbGciOiJSUzI1NiJ9.eyJ0ZW5hbnRfaWQiOiJ0ZXN0X3RlbmFudF8xNzUyNTIzNDIxIiwiZGV2aWNlX2lkIjoiZGV2aWNlLTEyMyIsImdhbWVfaWQiOiJkZWZhdWx0X2dhbWUiLCJzdWIiOiJkZXZpY2UtMTIzXzVjODUwNzE0IiwiaWF0IjoxNzUyNzI2OTg1LCJleHAiOjE3NTI3Mjc4ODV9.Dz9npGt6jrTavM2oFchFi4Lw7tIoePd0TFsBxmx7f-yfxYwiIIBMiXfL_A0SMpTnINXvQkZrux16L_EXtZtEy2dfgO79ywac1TyYyuR_UPwrmuKR5jbNbXm5e9P8WY2z1KJOOQ7XVjvrZfkUrasyz-ZhDUmMIhAcwrLz9bDy3ih4I2rhCWvadM8my0tEBQ1vLTFt5uvJKQdt2L30zz5H2jOiV7JIWzFDhPW8eZZqFky259RU7WPMeAy1Z6pf4tYCnAf5zXtVuX0Wx_d5K0vqKoYf4YH1kb-tHBkh88jPCCLwY3liMHbCKO9mzqHbv7zirP6u6gIgcSy7TNX-ESKt5A",
   "refreshToken":"eebd9f2b-c421-4dda-a9ae-05ea08c6db6b",
   "tokenType":"Bearer",
-  "expiresIn":900,
+  "expiresIn":900000,
   "userId":"device-123_5c850714",
   "deviceId":"device-123",
   "gameId":"default_game",

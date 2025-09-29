@@ -338,7 +338,7 @@ Import this collection to test APIs in Postman:
     ```bash
     curl -X GET 'https://api.gameramp.com/v1/player/status' \
       -H 'Authorization: Bearer YOUR_TOKEN' \
-      -H 'X-Tenant-Id: test_tenant_1752523421' \
+      -H 'X-Tenant-ID: test_tenant_1752523421' \
       -H 'X-Game-Id: default_game' \
       -H 'X-Player-Id: test_player_123'
     ```
@@ -348,7 +348,7 @@ Import this collection to test APIs in Postman:
     ```bash
     curl -X GET 'https://api.gameramp.com/v1/player/store_configs' \
       -H 'Authorization: Bearer YOUR_TOKEN' \
-      -H 'X-Tenant-Id: test_tenant_1752523421' \
+      -H 'X-Tenant-ID: test_tenant_1752523421' \
       -H 'X-Game-Id: default_game' \
       -H 'X-Player-Id: test_player_123'
     ```
@@ -359,7 +359,7 @@ Import this collection to test APIs in Postman:
     curl -X POST 'https://api.gameramp.com/v1/events' \
       -H 'Authorization: Bearer YOUR_TOKEN' \
       -H 'Content-Type: application/json' \
-      -H 'X-Tenant-Id: test_tenant_1752523421' \
+      -H 'X-Tenant-ID: test_tenant_1752523421' \
       -d '[
         {
           "eventType": "test_event",
@@ -456,9 +456,6 @@ async function testEventBatching() {
   <Step title="Validate Timestamps">
     Use UTC timestamps within 5 minutes of server time
   </Step>
-  <Step title="Monitor Rate Limits">
-    Stay within API rate limits during testing
-  </Step>
   <Step title="Use Logging">
     Enable verbose logging to debug signature generation
   </Step>
@@ -483,9 +480,6 @@ async function makeAPICall(endpoint, options) {
           break;
         case 404:
           console.error('Resource not found');
-          break;
-        case 429:
-          console.error('Rate limited - slow down requests');
           break;
         case 500:
           console.error('Server error - retry later');

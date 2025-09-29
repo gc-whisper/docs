@@ -89,7 +89,7 @@ curl -X POST 'https://api.gameramp.com/auth/login' \
 ```bash Use Token
 curl -X GET 'https://api.gameramp.com/v1/player/status' \
   -H 'Authorization: Bearer YOUR_JWT_TOKEN' \
-  -H 'X-Tenant-Id: your_tenant_id' \
+  -H 'X-Tenant-ID: your_tenant_id' \
   -H 'X-Game-Id: your_game_id' \
   -H 'X-Player-Id: player_123'
 ```
@@ -117,14 +117,6 @@ All API responses follow a consistent JSON format:
   "status": "error"
 }
 ```
-
-## Rate Limiting
-
-API requests are subject to rate limiting to ensure fair usage. Current limits:
-
-- **Authentication**: 10 requests per minute
-- **Data APIs**: 1000 requests per minute
-- **Configuration APIs**: 100 requests per minute
 
 ## Development Environment
 
