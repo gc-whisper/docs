@@ -25,7 +25,7 @@ Events are batched, body contains array of events
 There are some common properties with every event as well as event related properties also:
 
 - **Event Type** - `eventType` - mandatory (string type, like click, impression, purchase etc(TBD))
-- **Event Timestamp** - `timestamp` - Mandatory
+- **Event Timestamp** - `eventTimestamp` - Mandatory
 - **Session Id** - `sessionId` - Mandatory
 - **Player Id** - `playerId`
 - **Platform** - `platform`
@@ -55,6 +55,7 @@ There are some common properties with every event as well as event related prope
 
 ```bash
 curl --location 'https://api.gameramp.com/v1/events' \
+--header 'Authorization: Bearer <JWT_TOKEN>' \
 --header 'Content-Type: application/json' \
 --header 'X-Tenant-ID: test_tenant_1752523421' \
 --data '[

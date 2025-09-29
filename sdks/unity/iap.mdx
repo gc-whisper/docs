@@ -313,30 +313,6 @@ public class SoundManager : MonoBehaviour {
   </Tab>
 </Tabs>
 
-## Restore Purchases
-
-For non-consumable items and subscriptions:
-
-```csharp
-public void RestorePurchases() {
-    // Reinitialize IAP to restore
-    Gameramp.ReinitializeIAP();
-
-    // Fetch products will include owned items
-    Gameramp.FetchStoreProducts(
-        (products) => {
-            // Check for owned products
-            foreach (var sku in products.ownedSkus) {
-                GrantPurchase(sku.skuId);
-            }
-        },
-        (error) => {
-            Debug.LogError($"Restore failed: {error}");
-        }
-    );
-}
-```
-
 ## Testing IAP
 
 <Warning>
@@ -352,7 +328,6 @@ public void RestorePurchases() {
   * [ ] Test purchase cancellation
   * [ ] Test network failure handling
   * [ ] Verify receipt validation
-  * [ ] Test restore purchases
   * [ ] Check currency display and localization
 </Checklist>
 
@@ -393,9 +368,6 @@ public void RestorePurchases() {
   </Step>
   <Step title="Receipt Storage">
     Save purchase receipts for verification
-  </Step>
-  <Step title="Restore Option">
-    Always provide restore button for non-consumables
   </Step>
 </Steps>
 

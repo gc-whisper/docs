@@ -21,3 +21,35 @@ Logs out a device by invalidating its active tokens. This endpoint requires auth
 
 - **Content-Type:** application/json
 - **Authorization:** Bearer `<accessToken>`
+
+## Response
+
+### Success (200 OK)
+```json
+{
+  "message": "Logout successful"
+}
+```
+
+### Error Responses
+
+- **Status Code: 401 Unauthorized** - When the access token is invalid or expired
+- **Status Code: 500 Internal Server Error** - When an unexpected server error occurs
+
+## Example
+
+```bash
+curl -X POST \
+  https://api.gameramp.com/auth/logout \
+  -H 'Authorization: Bearer eyJraWQiOiI1Zjk5ZmRjMy1hMTdlLTg3ZGYtOWI4YS1jM2VmN2Y3M2FiMmQiLCJhbGciOiJSUzI1NiJ9...' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "deviceId": "device-123"
+  }'
+```
+
+Response:
+```json
+{
+  "message": "Logout successful"
+}
