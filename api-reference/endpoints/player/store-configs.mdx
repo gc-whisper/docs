@@ -11,7 +11,7 @@ description: 'GET /v1/player/store_configs'
 
 - **Authorization:** Bearer `<JWT_TOKEN>`
 - **Content-Type:** application/json
-- **X-Tenant-ID:** `<Tenant_ID>`
+- **X-Tenant-Id:** `<Tenant_ID>`
 - **X-Game-Id:** `<Game Id>`
 - **X-Player-Id:** `<Player ID>`
 
@@ -62,7 +62,7 @@ description: 'GET /v1/player/store_configs'
 ## Curl
 
 ```bash
-curl -X GET "http://api.gameramp.com/v1/player/store_configs" \
+curl -X GET "https://api.gameramp.com/v1/player/store_configs" \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "X-Tenant-Id: your-studio-id" \
   -H "X-Game-Id: your-game-id" \

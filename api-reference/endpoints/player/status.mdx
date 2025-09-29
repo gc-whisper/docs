@@ -13,7 +13,7 @@ description: 'GET /v1/player/status'
 
 - **Authorization:** Bearer `<JWT_TOKEN>`
 - **Content-Type:** application/json
-- **X-Tenant-ID:** `<Tenant_ID>`
+- **X-Tenant-Id:** `<Tenant_ID>`
 - **X-Game-Id:** `<Game Id>`
 - **X-Player-Id:** `<Player ID>`
 
@@ -34,7 +34,7 @@ description: 'GET /v1/player/status'
 ### Curl
 
 ```bash
-curl -X GET "http://api.gameramp.com/v1/player/status" \
+curl -X GET "https://api.gameramp.com/v1/player/status" \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "X-Tenant-Id: Tenant ID" \
   -H "X-Game-Id: Game Id" \

@@ -16,7 +16,7 @@ Event ingestion API - Track events to Gameramp from client devices using Api cal
 
 - **Authorization:** Bearer `<JWT_TOKEN>`
 - **Content-Type:** application/json
-- **X-Tenant-ID:** `<Tenant_ID>`
+- **X-Tenant-Id:** `<Tenant_ID>`
 
 ## Body
 
@@ -24,30 +24,32 @@ Events are batched, body contains array of events
 
 There are some common properties with every event as well as event related properties also:
 
-- **Event Type** - `eventType` - mandatory (string type, like click, impression, purchase etc(TBD))
-- **Event Timestamp** - `eventTimestamp` - Mandatory
+- **Event Type** - `eventType` - Mandatory (string type, like session_start, ad_impression, purchase, etc.)
+- **Event Timestamp** - `eventTimestamp` - Mandatory (ISO 8601 format: yyyy-MM-dd'T'HH:mm:ss.SSSZ)
 - **Session Id** - `sessionId` - Mandatory
-- **Player Id** - `playerId`
-- **Platform** - `platform`
-- **SDK version** - `sdkVersion`
-- **App version** - `appVersion`
-- **Event Properties** - `properties`
+- **Player Id** - `playerId` - Mandatory
+- **Platform** - `platform` - Mandatory (e.g., Android, iOS)
+- **SDK version** - `sdkVersion` - Mandatory
+- **App version** - `appVersion` - Mandatory
+- **Event Properties** - `properties` - Optional
   - Custom event properties
-  - This is an object may varies with event types
+  - This is an object that varies with event types
 
 ```json
 [
   {
     "eventType": "session_start",
-    "timestamp": "2025-07-23T10:13:56.000Z", // yyyy-MM-dd'T'HH:mm:ss.SSSXXX
-    "payload": {
-      // Any payload key/value pair
-    },
-    "metadata": {
-      // Any metadata key/value pair
+    "eventTimestamp": "2025-07-23T10:13:56.000Z",
+    "sessionId": "4824583f-067b-4a33-b5f4-4c540487b79a",
+    "playerId": "player_123",
+    "platform": "Android",
+    "sdkVersion": "1.0.0",
+    "appVersion": "2.1.0",
+    "properties": {
+      // Custom properties specific to the event type
     }
   },
-  // .....
+  // Additional events...
 ]
 ```
 
@@ -56,35 +58,35 @@ There are some common properties with every event as well as event related prope
 ```bash
 curl --location 'https://api.gameramp.com/v1/events' \
 --header 'Content-Type: application/json' \
---header 'X-Tenant-ID: test_tenant_1752523421' \
+--header 'X-Tenant-Id: test_tenant_1752523421' \
 --data '[
   {
     "eventType": "Ad_Impression",
-    "timestamp": "2025-07-23T10:13:56.000Z",
-    "payload": {
-      "userId": "66317bbb_23057fc5",
-      "sessionId": "4824583f-067b-4a33-b5f4-4c540487b79a",
+    "eventTimestamp": "2025-07-23T10:13:56.000Z",
+    "sessionId": "4824583f-067b-4a33-b5f4-4c540487b79a",
+    "playerId": "66317bbb_23057fc5",
+    "platform": "Android",
+    "sdkVersion": "1.0.0",
+    "appVersion": "2.1.0",
+    "properties": {
       "adId": "demo_ad_001",
-      "campaignId": "demo_campaign_001"
-    },
-    "metadata": {
+      "campaignId": "demo_campaign_001",
       "deviceType": "Pixel 8",
-      "osName": "Android",
       "osVersion": "14"
     }
   },
   {
     "eventType": "Ad_Impression",
-    "timestamp": "2025-07-23T10:13:56.000Z",
-    "payload": {
-      "userId": "66317bbb_23057fc5",
-      "sessionId": "4824583f-067b-4a33-b5f4-4c540487b79a",
+    "eventTimestamp": "2025-07-23T10:13:56.000Z",
+    "sessionId": "4824583f-067b-4a33-b5f4-4c540487b79a",
+    "playerId": "66317bbb_23057fc5",
+    "platform": "Android",
+    "sdkVersion": "1.0.0",
+    "appVersion": "2.1.0",
+    "properties": {
       "adId": "demo_ad_001",
-      "campaignId": "demo_campaign_001"
-    },
-    "metadata": {
+      "campaignId": "demo_campaign_001",
       "deviceType": "Pixel 8",
-      "osName": "Android",
       "osVersion": "14"
     }
   }

@@ -6,383 +6,58 @@ icon: 'code'
 
 # API Reference
 
-Complete reference for all GameRamp SDK methods and properties.
+Complete reference for all GameRamp SDK methods.
 
 ## Core Methods
 
-Essential methods for SDK initialization and lifecycle management.
+| Method | Description | Parameters | Returns |
+|--------|-------------|------------|---------|
+| Initialize | Initialize SDK | config – SDK config | void |
+| Login | Authenticate user | onSuccess, onFail | void |
+| Cleanup | Release SDK resources | – | void |
+| Logout | Logout current user | – | void |
+
+## Ads
 
 | Method | Description | Parameters | Returns |
 |--------|-------------|------------|---------|
-| `Initialize` | Initialize SDK | config - SDK config | void |
-| `Login` | Authenticate user | onSuccess, onFail | void |
-| `Cleanup` | Release SDK resources | – | void |
-| `Logout` | Logout current user | – | void |
-
-### Code Examples
-
-<CodeGroup>
-```csharp Initialize
-// Initialize with config
-SDKConfig config = Resources.Load<SDKConfig>("GamerampConfig");
-Gameramp.Initialize(config);
-```
-
-```csharp Login
-// Login with callbacks
-Gameramp.Login(
-    onSuccess: () => {
-        Debug.Log("Login successful");
-    },
-    onFail: () => {
-        Debug.LogError("Login failed");
-    }
-);
-```
-
-```csharp Cleanup
-// Clean up resources
-void OnApplicationQuit() {
-    Gameramp.Cleanup();
-}
-```
-</CodeGroup>
+| TrackBannerAd | Track banner ad impression | adId, campaignId | void |
+| TrackInterstitialAd | Track interstitial ad impression | adId, campaignId | void |
+| TrackRewardedAd | Track rewarded ad impression | adId, campaignId | void |
 
 ## Analytics Methods
 
-Methods for tracking user behavior and app events.
-
 | Method | Description | Parameters | Returns |
 |--------|-------------|------------|---------|
-| `TrackSessionStart` | Track app session start | – | void |
-| `TrackSessionEnd` | Track app session end | – | void |
-| `TrackFirstOpen` | Track first app open | source, campaign | void |
-
-### Parameters
-
-<ParamField path="source" type="string">
-  Acquisition source identifier (e.g., "organic", "facebook")
-</ParamField>
-
-<ParamField path="campaign" type="string">
-  Campaign name or identifier
-</ParamField>
-
-### Code Examples
-
-<CodeGroup>
-```csharp Session Tracking
-// Track session lifecycle
-void OnApplicationFocus(bool hasFocus) {
-    if (hasFocus) {
-        Gameramp.TrackSessionStart();
-    } else {
-        Gameramp.TrackSessionEnd();
-    }
-}
-```
-
-```csharp First Open
-// Track first open with attribution
-if (!PlayerPrefs.HasKey("FirstOpenTracked")) {
-    Gameramp.TrackFirstOpen("organic", "direct");
-    PlayerPrefs.SetInt("FirstOpenTracked", 1);
-}
-```
-</CodeGroup>
-
-## Ads Methods
-
-Methods for tracking ad impressions across different formats.
-
-| Method | Description | Parameters | Returns |
-|--------|-------------|------------|---------|
-| `TrackBannerAd` | Track banner ad impression | adId, campaignId | void |
-| `TrackInterstitialAd` | Track interstitial ad impression | adId, campaignId | void |
-| `TrackRewardedAd` | Track rewarded ad impression | adId, campaignId | void |
-
-### Parameters
-
-<ParamField path="adId" type="string">
-  Unique identifier for the ad placement
-</ParamField>
-
-<ParamField path="campaignId" type="string">
-  Campaign or ad network identifier
-</ParamField>
-
-### Code Examples
-
-<CodeGroup>
-```csharp Banner Tracking
-// Track banner impression
-Gameramp.TrackBannerAd("main_menu_banner", "admob_campaign");
-```
-
-```csharp Interstitial Tracking
-// Track interstitial after level
-void OnLevelComplete() {
-    ShowInterstitial();
-    Gameramp.TrackInterstitialAd("level_complete", "unity_ads");
-}
-```
-
-```csharp Rewarded Tracking
-// Track rewarded ad
-void ShowRewardedAd() {
-    Gameramp.TrackRewardedAd("extra_life", "admob_rewarded");
-    // Show ad and grant reward
-}
-```
-</CodeGroup>
+| TrackSessionStart | Track app session start | – | void |
+| TrackSessionEnd | Track app session end | – | void |
+| TrackFirstOpen | Track first app open | source, campaign | void |
 
 ## IAP Methods
 
-Methods for managing in-app purchases.
-
 | Method | Description | Parameters | Returns |
 |--------|-------------|------------|---------|
-| `FetchStoreProducts` | Fetch available store products | onSuccess, onError callbacks | void |
-| `InitiatePurchase` | Start purchase flow | productId, onSuccess, onFailed | void |
-| `ReinitializeIAP` | Reinitialize IAP after resume | – | void |
+| FetchStoreProducts | Fetch available store products | onSuccess, onError callbacks | void |
+| InitiatePurchase | Start purchase flow | productId, onSuccess, onFailed | void |
+| ReinitializeIAP | Reinitialize IAP after resume | – | void |
 
-### Callback Types
+**Note:** All tracking methods support optional success/error callbacks for advanced tracking.
 
-<CodeGroup>
-```csharp FetchStoreProducts Callbacks
-// Success callback
-Action<StoreProducts> onSuccess = (products) => {
-    foreach (var sku in products.activeSkus) {
-        Debug.Log($"Product: {sku.name} - {sku.price}");
-    }
-};
-
-// Error callback
-Action<string> onError = (error) => {
-    Debug.LogError($"Error: {error}");
-};
-
-Gameramp.FetchStoreProducts(onSuccess, onError);
-```
-
-```csharp InitiatePurchase Callbacks
-// Success callback
-Action<Purchase> onSuccess = (purchase) => {
-    Debug.Log($"Purchased: {purchase.productId}");
-};
-
-// Failed callback
-Action<string> onFailed = (error) => {
-    Debug.LogError($"Failed: {error}");
-};
-
-Gameramp.InitiatePurchase("product_id", onSuccess, onFailed);
-```
-</CodeGroup>
-
-## Events
-
-Global events for handling purchases.
-
-| Event | Description | Type |
-|-------|-------------|------|
-| `OnPurchaseCompleted` | Fired when purchase succeeds | `Action<Purchase>` |
-| `OnPurchaseFailed` | Fired when purchase fails | `Action<string>` |
-
-### Event Usage
-
-```csharp
-// Subscribe to events
-void OnEnable() {
-    Gameramp.OnPurchaseCompleted += HandlePurchaseSuccess;
-    Gameramp.OnPurchaseFailed += HandlePurchaseFailure;
-}
-
-// Unsubscribe from events
-void OnDisable() {
-    Gameramp.OnPurchaseCompleted -= HandlePurchaseSuccess;
-    Gameramp.OnPurchaseFailed -= HandlePurchaseFailure;
-}
-
-// Event handlers
-void HandlePurchaseSuccess(Purchase purchase) {
-    Debug.Log($"Purchase completed: {purchase.productId}");
-}
-
-void HandlePurchaseFailure(string error) {
-    Debug.LogError($"Purchase failed: {error}");
-}
-```
-
-## Data Types
-
-### StoreProducts
-
-```csharp
-public class StoreProducts {
-    public List<SKU> activeSkus;  // Available products
-    public List<SKU> ownedSkus;   // Owned non-consumables
-}
-```
-
-### SKU
-
-```csharp
-public class SKU {
-    public string skuId;      // Product identifier
-    public string name;        // Display name
-    public string price;       // Localized price string
-    public decimal priceValue; // Numeric price value
-    public string currency;    // Currency code
-}
-```
-
-### Purchase
-
-```csharp
-public class Purchase {
-    public string productId;     // Product identifier
-    public string transactionId; // Transaction ID
-    public string receipt;        // Purchase receipt
-    public decimal price;         // Price paid
-    public DateTime purchaseDate; // Purchase timestamp
-}
-```
-
-## Advanced Features
-
-### Logging
-
-Control SDK logging for debugging:
-
-```csharp
-// Enable verbose logging
-GRLogger.IsLoggingEnabled = true;
-
-// Disable logging in production
-GRLogger.IsLoggingEnabled = false;
-```
-
-### Optional Callbacks
-
-All tracking methods support optional success/error callbacks:
-
-```csharp
-// Track with callbacks
-Gameramp.TrackSessionStart(
-    onSuccess: () => Debug.Log("Session tracked"),
-    onError: (error) => Debug.LogError($"Failed: {error}")
-);
-
-// Track without callbacks (fire-and-forget)
-Gameramp.TrackSessionStart();
-```
-
-## Error Handling
-
-<Tabs>
-  <Tab title="Try-Catch Pattern">
-    ```csharp
-    try {
-        Gameramp.Initialize(config);
-    } catch (Exception e) {
-        Debug.LogError($"Initialization failed: {e.Message}");
-        // Handle error appropriately
-    }
-    ```
-  </Tab>
-
-  <Tab title="Null Checks">
-    ```csharp
-    // Check if initialized
-    if (Gameramp.IsInitialized) {
-        Gameramp.TrackSessionStart();
-    } else {
-        Debug.LogWarning("SDK not initialized");
-    }
-    ```
-  </Tab>
-
-  <Tab title="Callback Errors">
-    ```csharp
-    Gameramp.FetchStoreProducts(
-        onSuccess: (products) => {
-            // Handle success
-        },
-        onError: (error) => {
-            // Log error
-            Debug.LogError(error);
-
-            // Show user-friendly message
-            ShowErrorDialog("Store unavailable");
-
-            // Retry logic
-            StartCoroutine(RetryFetch());
-        }
-    );
-    ```
-  </Tab>
-</Tabs>
-
-## Platform-Specific Notes
-
-<AccordionGroup>
-  <Accordion title="Android">
-    - Requires minimum API Level 24
-    - Internet permission auto-added
-    - Google Play Services recommended
-    - ProGuard rules included
-  </Accordion>
-
-  <Accordion title="iOS">
-    - Requires minimum iOS 12.0
-    - StoreKit framework auto-linked
-    - App Transport Security configured
-    - Privacy manifest included
-  </Accordion>
-
-  <Accordion title="Unity Editor">
-    - Mock responses in editor
-    - No real purchases in editor
-    - Test mode available
-    - Console logging enhanced
-  </Accordion>
-</AccordionGroup>
-
-## Migration Guide
-
-If you're migrating from an older SDK version:
-
-<Steps>
-  <Step title="Update Import">
-    Remove old SDK files before importing new version
-  </Step>
-  <Step title="Config Changes">
-    Create new SDKConfig if format changed
-  </Step>
-  <Step title="API Updates">
-    Update deprecated method calls
-  </Step>
-  <Step title="Test Thoroughly">
-    Test all features after migration
-  </Step>
-</Steps>
-
-## Support
+## Next Steps
 
 <CardGroup cols={2}>
+  <Card
+    title="Troubleshooting"
+    icon="wrench"
+    href="/sdks/unity/troubleshooting"
+  >
+    Common issues and solutions
+  </Card>
   <Card
     title="Contact Support"
     icon="envelope"
     href="mailto:connect@gameramp.com"
   >
     Get help from our team
-  </Card>
-  <Card
-    title="Troubleshooting"
-    icon="wrench"
-    href="/sdks/unity/troubleshooting"
-  >
-    Common issues and fixes
   </Card>
 </CardGroup>

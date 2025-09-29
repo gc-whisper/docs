@@ -1,6 +1,6 @@
 ---
-title: "Platform Configuration"
-description: "Platform-specific setup for Android, iOS, and IL2CPP"
+title: "Configuration"
+description: "Platform-specific setup and IL2CPP configuration"
 icon: "gear"
 ---
 
@@ -8,197 +8,47 @@ icon: "gear"
 
 Configure platform-specific settings for Android, iOS, and IL2CPP builds.
 
-## Android Configuration
+## Android
 
-<Steps>
-  <Step title="Enable Custom Gradle Template">
-    In Unity: **Player Settings → Publishing Settings → Build**
+- Enable custom mainTemplate.gradle in Player Settings.
+- Java version: VERSION_11 (Unity 2021.3.45) & VERSION_17 (Unity 6)
+- Permissions automatically added: INTERNET, ACCESS_NETWORK_STATE
 
-    Enable **Custom Main Gradle Template**
-  </Step>
-  <Step title="Java Version">
-    Set the appropriate Java version based on your Unity version:
+## iOS
 
-    <Tabs>
-      <Tab title="Unity 2021.3.45">
-        Use **VERSION_11**
-      </Tab>
-      <Tab title="Unity 6">
-        Use **VERSION_17**
-      </Tab>
-    </Tabs>
-  </Step>
-  <Step title="Automatic Permissions">
-    The following permissions are automatically added:
+- Target minimum iOS 12.0.
+- StoreKit automatically included for IAP.
 
-    - `INTERNET` - Required for network requests
-    - `ACCESS_NETWORK_STATE` - For network connectivity checks
-  </Step>
-</Steps>
+## IL2CPP
 
-<Info>
-  No additional Android configuration is required. The SDK handles all necessary setup automatically.
-</Info>
+Unity's IL2CPP backend strips unused code during builds. To prevent GameRamp SDK classes and Newtonsoft.Json types from being removed, a link.xml file is required.
 
-## iOS Configuration
+- A preconfigured link.xml file is already included with the GameRamp SDK package (GamerampSDK/link.xml).
+- If your project already has a link.xml file:
+  - Open it and check whether it contains entries for:
+    - GamerampCoreDLL / GamerampUnitySDK
+    - Newtonsoft.Json
+  - If these entries are missing, copy them from the provided file and add them into your existing link.xml.
+- If your project does not have a link.xml:
+  - Move or copy the provided file into your project's Assets/ root directory.
 
-<Steps>
-  <Step title="Minimum iOS Version">
-    Set target minimum to **iOS 12.0**
+**Note:** Unity only respects link.xml files inside the Assets/ directory. Files left inside the SDK package folder will be ignored during build.
 
-    In Unity: **Player Settings → Other Settings → Target minimum iOS Version**
-  </Step>
-  <Step title="StoreKit Framework">
-    StoreKit is automatically included for IAP functionality.
+## Next Steps
 
-    No manual framework addition required.
-  </Step>
-</Steps>
-
-<Note>
-  For App Store submissions, ensure your app's privacy policy includes data collection disclosures for analytics.
-</Note>
-
-## IL2CPP Configuration
-
-Unity's IL2CPP backend strips unused code during builds. The GameRamp SDK includes a preconfigured `link.xml` file to prevent code stripping.
-
-### If Your Project Has No link.xml
-
-<Steps>
-  <Step title="Locate the File">
-    Find `link.xml` in `GamerampSDK/link.xml`
-  </Step>
-  <Step title="Move to Assets Root">
-    Move or copy the file to your project's `Assets/` root directory
-  </Step>
-</Steps>
-
-### If Your Project Already Has link.xml
-
-<Steps>
-  <Step title="Open Existing File">
-    Open your existing `link.xml` file
-  </Step>
-  <Step title="Check for Entries">
-    Verify it contains entries for:
-
-    - `GamerampCoreDLL` / `GamerampUnitySDK`
-    - `Newtonsoft.Json`
-  </Step>
-  <Step title="Merge if Missing">
-    If entries are missing, copy them from `GamerampSDK/link.xml` and add to your file:
-
-    ```xml
-    <linker>
-      <!-- GameRamp SDK -->
-      <assembly fullname="GamerampCoreDLL" preserve="all"/>
-      <assembly fullname="GamerampUnitySDK" preserve="all"/>
-    
-      <!-- JSON Serialization -->
-      <assembly fullname="Newtonsoft.Json" preserve="all"/>
-    </linker>
-    ```
-  </Step>
-</Steps>
-
-<Warning>
-  Unity only respects `link.xml` files in the `Assets/` directory. Files left inside the SDK package folder will be ignored during build.
-</Warning>
-
-## Build Settings Checklist
-
-Before building your game, verify these settings:
-
-<Tabs>
-  <Tab title="Android">
-    <Checklist>
-  * [ ] Custom Main Gradle Template enabled
-  * [ ] Correct Java version selected
-  * [ ] Minimum API Level 24 (Android 7.0)
-  * [ ] Internet permission will be auto-added
-</Checklist>
-  </Tab>
-  <Tab title="iOS">
-    <Checklist>
-  * [ ] Minimum iOS version set to 12.0
-  * [ ] Valid provisioning profile
-  * [ ] StoreKit capability enabled (for IAP)
-  * [ ] Privacy policy updated for data collection
-</Checklist>
-  </Tab>
-  <Tab title="IL2CPP">
-    <Checklist>
-  * [ ] link.xml present in Assets/ directory
-  * [ ] GameRamp assemblies preserved
-  * [ ] Newtonsoft.Json preserved
-  * [ ] Stripping Level set appropriately
-</Checklist>
-  </Tab>
-</Tabs>
-
-## Platform-Specific Code
-
-Use Unity's platform defines to write platform-specific code:
-
-<CodeGroup>
-
-```csharp Android Only
-#if UNITY_ANDROID
-    // Android-specific code
-    Gameramp.TrackAndroidSpecificEvent();
-#endif
-```
-
-
-```csharp iOS Only
-#if UNITY_IOS
-    // iOS-specific code
-    Gameramp.TrackiOSSpecificEvent();
-#endif
-```
-
-
-```csharp Platform Detection
-#if UNITY_ANDROID
-    Debug.Log("Running on Android");
-#elif UNITY_IOS
-    Debug.Log("Running on iOS");
-#else
-    Debug.Log("Running in Editor or other platform");
-#endif
-```
-
-</CodeGroup>
-
-## Common Issues & Solutions
-
-<AccordionGroup>
-  <Accordion title="IL2CPP Build Errors">
-    **Problem**: Missing method exceptions at runtime
-
-    **Solution**:
-
-    - Ensure link.xml is in Assets/ root
-    - Verify all GameRamp assemblies are preserved
-    - Check Unity Console for stripping warnings
-  </Accordion>
-  <Accordion title="Android Build Fails">
-    **Problem**: Gradle build errors
-
-    **Solution**:
-
-    - Verify Java version matches Unity version
-    - Clear Gradle cache: `~/.gradle/caches/`
-    - Update Android SDK/NDK if needed
-  </Accordion>
-  <Accordion title="iOS Archive Issues">
-    **Problem**: App Store submission errors
-
-    **Solution**:
-
-    - Verify minimum iOS version is 12.0+
-    - Check provisioning profile includes IAP capability
-    - Ensure Info.plist has required usage descriptions
-  </Accordion>
-</AccordionGroup>
+<CardGroup cols={2}>
+  <Card
+    title="Analytics"
+    icon="chart-line"
+    href="/sdks/unity/analytics"
+  >
+    Track user sessions and events
+  </Card>
+  <Card
+    title="Ads Tracking"
+    icon="rectangle-ad"
+    href="/sdks/unity/ads"
+  >
+    Implement ad impression tracking
+  </Card>
+</CardGroup>

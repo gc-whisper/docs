@@ -90,7 +90,7 @@ print(f"Signature: {signature}")
 ### Step 2: Login and Get Token
 
 ```bash
-curl -X POST 'http://api.gameramp.com/auth/login' \
+curl -X POST 'https://api.gameramp.com/auth/login' \
   -H 'Content-Type: application/json' \
   -d '{
     "apiKey": "test_tenant_4Dqms3ygG9FVC",
@@ -107,7 +107,7 @@ curl -X POST 'http://api.gameramp.com/auth/login' \
 ACCESS_TOKEN="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
 
 # Use it in API calls
-curl -X GET 'http://api.gameramp.com/v1/player/status' \
+curl -X GET 'https://api.gameramp.com/v1/player/status' \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H 'X-Tenant-Id: test_tenant_1752523421' \
   -H 'X-Game-Id: default_game' \
@@ -123,7 +123,7 @@ curl -X GET 'http://api.gameramp.com/v1/player/status' \
 #!/bin/bash
 
 # Configuration
-API_BASE="http://api.gameramp.com"
+API_BASE="https://api.gameramp.com"
 API_KEY="test_tenant_4Dqms3ygG9FVC"
 API_SECRET="b815ebac-9744-43db-b5e6-89f90620297e-Wjl8qlWrJn2r4OEB7UXJ_L8iYOLTR8p10t83Wi_79Q"
 DEVICE_ID="device-$(date +%s)"
@@ -193,7 +193,7 @@ echo "5. Sending test events..."
 EVENT_RESPONSE=$(curl -s -X POST "${API_BASE}/v1/events" \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H 'Content-Type: application/json' \
-  -H "X-Tenant-ID: $TENANT_ID" \
+  -H "X-Tenant-Id: $TENANT_ID" \
   -d "[
     {
       \"eventType\": \"session_start\",
@@ -323,7 +323,7 @@ Import this collection to test APIs in Postman:
 <Tabs>
   <Tab title="Login">
     ```bash
-    curl -X POST 'http://api.gameramp.com/auth/login' \
+    curl -X POST 'https://api.gameramp.com/auth/login' \
       -H 'Content-Type: application/json' \
       -d '{
         "apiKey": "test_tenant_4Dqms3ygG9FVC",
@@ -336,7 +336,7 @@ Import this collection to test APIs in Postman:
 
   <Tab title="Player Status">
     ```bash
-    curl -X GET 'http://api.gameramp.com/v1/player/status' \
+    curl -X GET 'https://api.gameramp.com/v1/player/status' \
       -H 'Authorization: Bearer YOUR_TOKEN' \
       -H 'X-Tenant-Id: test_tenant_1752523421' \
       -H 'X-Game-Id: default_game' \
@@ -346,7 +346,7 @@ Import this collection to test APIs in Postman:
 
   <Tab title="Store Configs">
     ```bash
-    curl -X GET 'http://api.gameramp.com/v1/player/store_configs' \
+    curl -X GET 'https://api.gameramp.com/v1/player/store_configs' \
       -H 'Authorization: Bearer YOUR_TOKEN' \
       -H 'X-Tenant-Id: test_tenant_1752523421' \
       -H 'X-Game-Id: default_game' \
@@ -359,7 +359,7 @@ Import this collection to test APIs in Postman:
     curl -X POST 'https://api.gameramp.com/v1/events' \
       -H 'Authorization: Bearer YOUR_TOKEN' \
       -H 'Content-Type: application/json' \
-      -H 'X-Tenant-ID: test_tenant_1752523421' \
+      -H 'X-Tenant-Id: test_tenant_1752523421' \
       -d '[
         {
           "eventType": "test_event",
