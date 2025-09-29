@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "linden",
+  "theme": "aspen",
   "name": "GameRamp Documentation",
   "colors": {
     "primary": "#277C48",
@@ -10,18 +10,6 @@
   "favicon": "/favicon.svg",
   "navigation": {
     "tabs": [
-      {
-        "tab": "Getting Started",
-        "groups": [
-          {
-            "group": "Overview",
-            "pages": [
-              "index",
-              "quickstart"
-            ]
-          }
-        ]
-      },
       {
         "tab": "Unity SDK",
         "groups": [
