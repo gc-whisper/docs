@@ -1,0 +1,70 @@
+---
+title: "Agentic Insights"
+description: "AI-powered analytics for deep player behavior and game economy insights"
+icon: "brain"
+---
+
+## Key Features
+- Automated analysis of player behavior patterns
+- Cohort retention analysis
+- Revenue and monetization optimization
+- Marketing performance insights
+- Data quality monitoring
+- Custom reporting and recommendations
+
+## Preferred Data Format
+
+For optimal performance, Agentic Insights expects data in the following format:
+
+| Name | Data Type | Description |
+|------|-----------|-------------|
+| user_id | STRING | Unique user identifier |
+| session_id | STRING | Session identifier (if available) |
+| platform | STRING | Platform (e.g., ios, android) |
+| install_date | TIMESTAMP | When the user installed the game |
+| event_timestamp | TIMESTAMP | When the event was triggered |
+| event_id | STRING | Unique event identifier |
+| event_name | STRING | Type of event (e.g., ad_watched, user_payment_success) |
+| event_source | STRING | Where the event was triggered (server, sdk, client) |
+| event_revenue | FLOAT | Revenue from event in USD |
+| event_currency | STRING | Currency code (e.g., USD, or in-game currency) |
+| event_value | FLOAT | Notional value (+ve if user received, -ve if consumed) |
+| extra_info | STRING | Additional event information |
+| ad_format | STRING | Ad format (rewarded, interstitial, banner) |
+| ad_unit_id | STRING | Unique identifier for the ad placement |
+| placement_name | STRING | Name of the placement |
+| mediation_partner | STRING | Mediation partner (e.g., admob) |
+| network_name | STRING | Ad network (e.g., adcolony) |
+
+## Integration Steps
+
+1. **Enable Agentic Insights**
+   - Navigate to the GameRamp Dashboard
+   - Go to Features > Agentic Insights
+   - Enable the feature for your project
+
+2. **Configure Data Pipeline**
+   You can set up your data pipeline in one of the following ways:
+
+   **Option 1: Direct SDK Integration**
+   - The GameRamp SDK automatically tracks and sends events
+   - No additional configuration needed for basic tracking
+
+   **Option 2: CSV/Parquet Upload**
+   1. Prepare your data in the preferred format
+   2. Upload the file to Google Cloud Storage (GCS)
+   3. Create a table in BigQuery
+   4. Load data from the file to BigQuery
+
+   **Option 3: ETL Integration**
+   - Set up Fivetran or Airbyte for reverse ETL
+   - Configure the connection to your data warehouse
+   - Map fields according to the preferred data format
+
+3. **Accessing Insights**
+   - Open the GameRamp Dashboard
+   - Navigate to Insights
+   - View automated reports and recommendations
+   - Create custom dashboards as needed
+
+For additional support, contact [GameRamp Support](mailto:support@gameramp.com).

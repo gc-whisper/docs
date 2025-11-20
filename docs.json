@@ -26,7 +26,8 @@
             "pages": [
               "sdks/unity/analytics",
               "sdks/unity/ads",
-              "sdks/unity/iap"
+              "sdks/unity/iap",
+              "sdks/unity/agentic-insights"
             ]
           },
           {
